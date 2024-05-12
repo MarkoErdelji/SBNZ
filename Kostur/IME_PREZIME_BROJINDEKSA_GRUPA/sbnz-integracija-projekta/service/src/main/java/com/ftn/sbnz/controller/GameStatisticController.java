@@ -2,19 +2,20 @@ package com.ftn.sbnz.controller;
 
 import com.ftn.sbnz.exception.NotFoundException;
 import com.ftn.sbnz.model.GameStatistic;
-import com.ftn.sbnz.service.GameStatisticService;
+import com.ftn.sbnz.service.GameStatisticServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/game-statistics")
 public class GameStatisticController {
-    private final GameStatisticService gameStatisticService;
+    private final GameStatisticServiceImpl gameStatisticService;
 
     @Autowired
-    public GameStatisticController(GameStatisticService gameStatisticService) {
+    public GameStatisticController(GameStatisticServiceImpl gameStatisticService) {
         this.gameStatisticService = gameStatisticService;
     }
 
