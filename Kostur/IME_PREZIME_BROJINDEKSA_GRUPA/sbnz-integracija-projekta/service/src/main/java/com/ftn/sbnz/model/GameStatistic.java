@@ -15,9 +15,20 @@ public class GameStatistic {
     private Long id;
 
     @Column
-    private int userId;
+    private Long userId;
     @Column
     private long timestamp;
+    @Column
+    private int regularKills;
+    @Column
+    private int headshotKills;
+    @Column
+    private int assists;
+    @Column
+    private int wallbangKills;
+    @Column
+    private int utilityUsages;
+
 
     @Enumerated(EnumType.STRING)
     @ElementCollection(targetClass = Report.class)
@@ -25,10 +36,55 @@ public class GameStatistic {
 
     public GameStatistic() {}
 
-    public GameStatistic(int userId, long timestamp, List<Report> reports) {
+    public GameStatistic(Long userId, long timestamp,List<Report> reports) {
         this.userId = userId;
         this.timestamp = timestamp;
+        this.regularKills = 0;
+        this.headshotKills = 0;
+        this.assists = 0;
+        this.wallbangKills = 0;
+        this.utilityUsages = 0;
         this.reports = reports;
+    }
+
+    public int getRegularKills() {
+        return regularKills;
+    }
+
+    public void setRegularKills(int regularKills) {
+        this.regularKills = regularKills;
+    }
+
+    public int getHeadshotKills() {
+        return headshotKills;
+    }
+
+    public void setHeadshotKills(int headshotKills) {
+        this.headshotKills = headshotKills;
+    }
+
+    public int getAssists() {
+        return assists;
+    }
+
+    public void setAssists(int assists) {
+        this.assists = assists;
+    }
+
+    public int getWallbangKills() {
+        return wallbangKills;
+    }
+
+    public void setWallbangKills(int wallbangKills) {
+        this.wallbangKills = wallbangKills;
+    }
+
+    public int getUtilityUsages() {
+        return utilityUsages;
+    }
+
+    public void setUtilityUsages(int utilityUsages) {
+        this.utilityUsages = utilityUsages;
     }
 
     public Long getId() {
@@ -39,11 +95,11 @@ public class GameStatistic {
         this.id = id;
     }
 
-    public int getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
