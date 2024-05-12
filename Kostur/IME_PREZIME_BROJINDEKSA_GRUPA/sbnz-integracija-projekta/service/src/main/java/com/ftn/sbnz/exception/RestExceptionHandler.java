@@ -16,6 +16,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         return buildResponseEntity(apiError);
     }
 
+    @ExceptionHandler(JwtExpiredException.class)
+    public ResponseEntity<?> handleExpiredJwtException(JwtExpiredException ex){
+         ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, ex.getMessage(), ex);
+        return buildResponseEntity(apiError);
+    }
     private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
         return new ResponseEntity<>(apiError, apiError.getStatus());
     }

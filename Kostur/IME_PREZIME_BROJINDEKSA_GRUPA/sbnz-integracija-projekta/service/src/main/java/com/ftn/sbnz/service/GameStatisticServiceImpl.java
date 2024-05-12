@@ -2,18 +2,20 @@ package com.ftn.sbnz.service;
 
 import com.ftn.sbnz.model.GameStatistic;
 import com.ftn.sbnz.repository.GameStatisticRepository;
+import com.ftn.sbnz.service.intefaces.GameStatisticService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public class GameStatisticService {
+public class GameStatisticServiceImpl implements GameStatisticService {
     private final GameStatisticRepository gameStatisticRepository;
 
     @Autowired
-    public GameStatisticService(GameStatisticRepository gameStatisticRepository) {
+    public GameStatisticServiceImpl(GameStatisticRepository gameStatisticRepository) {
         this.gameStatisticRepository = gameStatisticRepository;
     }
 

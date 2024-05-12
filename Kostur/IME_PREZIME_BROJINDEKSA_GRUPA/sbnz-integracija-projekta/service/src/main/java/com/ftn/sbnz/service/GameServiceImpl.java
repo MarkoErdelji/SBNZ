@@ -2,18 +2,20 @@ package com.ftn.sbnz.service;
 
 import com.ftn.sbnz.model.Game;
 import com.ftn.sbnz.repository.GameRepository;
+import com.ftn.sbnz.service.intefaces.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public class GameService {
+public class GameServiceImpl implements GameService {
     private final GameRepository gameRepository;
 
     @Autowired
-    public GameService(GameRepository gameRepository) {
+    public GameServiceImpl(GameRepository gameRepository) {
         this.gameRepository = gameRepository;
     }
 

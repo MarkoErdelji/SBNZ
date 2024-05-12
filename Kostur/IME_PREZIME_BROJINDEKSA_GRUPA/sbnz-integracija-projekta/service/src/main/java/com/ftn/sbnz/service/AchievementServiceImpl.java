@@ -2,18 +2,20 @@ package com.ftn.sbnz.service;
 
 import com.ftn.sbnz.model.Achievement;
 import com.ftn.sbnz.repository.AchievementRepository;
+import com.ftn.sbnz.service.intefaces.AchievementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public class AchievementService {
+public class AchievementServiceImpl implements AchievementService {
     private final AchievementRepository achievementRepository;
 
     @Autowired
-    public AchievementService(AchievementRepository achievementRepository) {
+    public AchievementServiceImpl(AchievementRepository achievementRepository) {
         this.achievementRepository = achievementRepository;
     }
 
