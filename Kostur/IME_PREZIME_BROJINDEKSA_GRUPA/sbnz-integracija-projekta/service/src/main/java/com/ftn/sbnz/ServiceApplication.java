@@ -2,6 +2,7 @@ package com.ftn.sbnz;
 
 import java.util.Arrays;
 
+import org.kie.api.runtime.KieSession;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +41,10 @@ public class ServiceApplication  {
 	}
 
 
+	@Bean
+	KieSession kieSession(){
+		return kieContainer().newKieSession("cepKsession");
+	}
 	@Bean
 	public KieContainer kieContainer() {
 		KieServices ks = KieServices.Factory.get();

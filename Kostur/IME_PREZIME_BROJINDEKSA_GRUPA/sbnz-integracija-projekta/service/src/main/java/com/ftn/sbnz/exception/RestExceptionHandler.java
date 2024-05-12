@@ -15,6 +15,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         ApiError apiError = new ApiError(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
         return buildResponseEntity(apiError);
     }
+ @ExceptionHandler(IllegalArgumentException.class)
+    protected ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage(), ex);
+        return buildResponseEntity(apiError);
+    }
 
     @ExceptionHandler(JwtExpiredException.class)
     public ResponseEntity<?> handleExpiredJwtException(JwtExpiredException ex){
