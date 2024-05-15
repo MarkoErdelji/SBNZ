@@ -18,6 +18,17 @@ public class Game {
     @Column
     private boolean analyzed;
 
+    @Column
+    private boolean isEnded = false;
+
+    public boolean isEnded() {
+        return isEnded;
+    }
+
+    public void setEnded(boolean ended) {
+        isEnded = ended;
+    }
+
     @OneToMany(cascade = CascadeType.ALL)
     private List<GameStatistic> gameStatistics;
 
