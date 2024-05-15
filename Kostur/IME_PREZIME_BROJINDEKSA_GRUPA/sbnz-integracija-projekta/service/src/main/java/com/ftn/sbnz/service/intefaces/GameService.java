@@ -15,4 +15,5 @@ public interface GameService {
     void processGameAction(Long gameId, Action action, String username);
      Game saveGame(List<UserGameDTO> userDTOs);
     void deleteGameById(Long id);
+    void endGame(Long gameId);
 }

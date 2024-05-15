@@ -6,6 +6,8 @@ import com.ftn.sbnz.model.*;
 import com.ftn.sbnz.model.enums.Action;
 import com.ftn.sbnz.model.enums.Report;
 import com.ftn.sbnz.repository.GameRepository;
+import com.ftn.sbnz.repository.GameStatisticRepository;
+import com.ftn.sbnz.repository.UserRepository;
 import com.ftn.sbnz.service.intefaces.GameService;
 import com.ftn.sbnz.service.intefaces.UserService;
 import org.kie.api.runtime.KieContainer;
@@ -27,10 +29,14 @@ public class GameServiceImpl implements GameService {
 
     @Autowired
     KieSession kieSession;
+    private final UserRepository userRepository;
+    private final GameStatisticRepository gameStatisticRepository;
 
     @Autowired
-    public GameServiceImpl(GameRepository gameRepository, KieContainer kieContainer) {
+    public GameServiceImpl(GameRepository gameRepository, UserRepository userRepository, GameStatisticRepository gameStatisticRepository,KieContainer kieContainer) {
         this.gameRepository = gameRepository;
+        this.userRepository = userRepository;
+        this.gameStatisticRepository = gameStatisticRepository;
     }
 
     @Autowired
@@ -47,46 +53,63 @@ public class GameServiceImpl implements GameService {
     @Override
     public void processGameAction(Long gameId, Action action, String username) {
         Game game = gameRepository.findById(gameId).get();
+        GameStatistic modifiedGameStatistic = null;
         for (FactHandle factHandle : kieSession.getFactHandles()) {
+            Object obj = kieSession.getObject(factHandle);
             System.out.println(kieSession.getObject(factHandle));
+            if (obj instanceof Game && ((Game) obj).getId() == game.getId()) {
+                game = (Game) obj;
+            }
+
         }
+
         GameStatistic usersStatistic = null;
         for (GameStatistic statistic : game.getGameStatistics()){
             if (statistic.getUserId() == userService.getUserByUsername(username).getId()){
                 usersStatistic = statistic;
+
             }
         }
+        for (FactHandle factHandle : kieSession.getFactHandles()){
+            Object obj = kieSession.getObject(factHandle);
+            if (obj instanceof GameStatistic && ((GameStatistic) obj).getId() == usersStatistic.getId()) {
+                modifiedGameStatistic = (GameStatistic) obj;
+            }
+        }
+        usersStatistic.setReports(modifiedGameStatistic.getReports());
+        int index = game.getGameStatistics().indexOf(usersStatistic);
         if (usersStatistic == null){ throw new IllegalArgumentException("User does not participate in this game!");}
         switch (action){
             case REGULAR_KILL:
-            usersStatistic.setRegularKills(usersStatistic.getRegularKills()+1);
             kieSession.insert(new RegularKillEvent(usersStatistic.getId(),System.currentTimeMillis()));
             kieSession.fireAllRules();
             break;
         case HEADSHOT_KILL:
-            usersStatistic.setHeadshotKills(usersStatistic.getHeadshotKills()+1);
             kieSession.insert(new HeadshotKillEvent(usersStatistic.getId()));
             kieSession.fireAllRules();
             break;
         case UTILITY_USAGE:
-            usersStatistic.setUtilityUsages(usersStatistic.getUtilityUsages()+1);
             kieSession.insert(new UtilityUsageEvent(usersStatistic.getId(),System.currentTimeMillis()));
             kieSession.fireAllRules();
             break;
         case ASSIST:
-            usersStatistic.setAssists(usersStatistic.getAssists()+1);
             kieSession.insert(new AssistEvent(usersStatistic.getId(),System.currentTimeMillis()));
             kieSession.fireAllRules();
             break;
         case WALLBANG_KILL:
-            usersStatistic.setWallbangKills(usersStatistic.getWallbangKills()+1);
             kieSession.insert(new WallbangEvent(usersStatistic.getId(),System.currentTimeMillis()));
             kieSession.fireAllRules();
             break;
         default:
             throw new IllegalArgumentException("Not a valid action!");
         }
-         gameRepository.save(game);
+
+        System.out.println("reportovi broj: " + modifiedGameStatistic.getReports().size());
+        if (index != -1) {
+            game.getGameStatistics().set(index, usersStatistic);
+        }
+//        gameStatisticRepository.save(usersStatistic);
+        gameRepository.save(game);
     }
 
     public Game saveGame(List<UserGameDTO> userDTOs) {
@@ -110,10 +133,24 @@ public class GameServiceImpl implements GameService {
         }
 
         Game game = new Game(false, gameStatistics);
+        kieSession.insert(game);
         return gameRepository.save(game);
     }
 
     public void deleteGameById(Long id) {
         gameRepository.deleteById(id);
+    }
+
+    @Override
+    public void endGame(Long gameId) {
+        Game game = gameRepository.findById(gameId).orElseThrow(() -> new NotFoundException("Game not found with id: " + gameId));
+        kieSession.insert(new GameEndedEvent(gameId));
+
+        kieSession.fireAllRules();
+        for (FactHandle factHandle : kieSession.getFactHandles()){
+            Object obj = kieSession.getObject(factHandle);
+            System.out.println(obj);
+        }
+        gameRepository.save(game);
     }
 }

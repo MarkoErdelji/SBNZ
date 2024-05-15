@@ -1,16 +1,64 @@
 package cep;
 
 import com.ftn.sbnz.model.HeadshotKillEvent
+import com.ftn.sbnz.model.RegularKillEvent
+import com.ftn.sbnz.model.User
 import com.ftn.sbnz.model.UtilityUsageEvent
+import com.ftn.sbnz.model.GameEndedEvent
+import com.ftn.sbnz.model.Game
 import com.ftn.sbnz.model.WallbangEvent
 import com.ftn.sbnz.model.GameStatistic
 import com.ftn.sbnz.model.ReportCooldown
+import com.ftn.sbnz.model.AimbotAnalasisEvent;
+import com.ftn.sbnz.model.SuspicionLevelRaisedEvent;
 import com.ftn.sbnz.model.enums.Report
+import com.ftn.sbnz.model.enums.SuspicionLevel
 
+
+rule "Update Headshot Kills"
+when
+    $event : HeadshotKillEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    $stat.setHeadshotKills($stat.getHeadshotKills() + 1);
+    $stat.setRegularKills($stat.getRegularKills() + 1);
+    update($stat);
+    System.out.println("Headshot kill recorded for game statistic ID: " + $stat.getId());
+end
+
+rule "Update Regular Kills"
+when
+    $event : RegularKillEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    $stat.setRegularKills($stat.getRegularKills() + 1);
+    update($stat);
+    System.out.println("Regular kill recorded for game statistic ID: " + $stat.getId());
+end
+
+rule "Update Wallbang Kills"
+when
+    $event : WallbangEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    $stat.setWallbangKills($stat.getWallbangKills() + 1);
+    $stat.setRegularKills($stat.getRegularKills() + 1);
+    update($stat);
+    System.out.println("Wallbang kill recorded for game statistic ID: " + $stat.getId());
+end
+
+rule "Update Utility Usages"
+when
+    $event : UtilityUsageEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    $stat.setUtilityUsages($stat.getUtilityUsages() + 1);
+    update($stat);
+    System.out.println("Utility usage recorded for game statistic ID: " + $stat.getId());
+end
 
 
 rule "AIMBOT Headshot Kill Rule"
-no-loop
 when
     $event: HeadshotKillEvent($gameStatId: gameStatisticId)
     $statistic: GameStatistic(id == $gameStatId)
@@ -20,7 +68,9 @@ when
         count()
     )
 then
-    System.out.println("AIMBOT Headshot Kill Rule activated! 1");
+    System.out.println("AIMBOT Headshot Kill Rule activated!");
+    $statistic.getReports().add(Report.AIMBOT);
+    update($statistic);
     insert(new ReportCooldown($gameStatId));
 end
 
@@ -56,4 +106,76 @@ then
     $statistic.getReports().add(Report.WALLHACK);
         System.out.println("AIMBOT Headshot Kill Rule activated! 3");
     update($statistic);
+end
+
+rule "Detect Aimbot in Game Statistics"
+when
+    $event : GameEndedEvent()
+    $game : Game($event.getGameId() == id)
+    $stat : GameStatistic() from $game.getGameStatistics()
+    $aimbotReports : Number(intValue >= 1) from accumulate(
+        $report :  Report( this == Report.AIMBOT) from $stat.getReports(),
+        count($report)
+    )
+then
+    AimbotAnalasisEvent aimbotAnalasisEvent = new AimbotAnalasisEvent($stat.getId());
+    insert(aimbotAnalasisEvent);
+    System.out.println("Aimbot detected in game statistic ID: " + $stat.getId());
+end
+
+rule "Suspicious Headshot Kills NONE to LOW"
+activation-group "suspicionLevels"
+salience 100
+when
+    $aimbotAnalasisEvent : AimbotAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $headshotKills : headshotKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.NONE)
+    eval((((double)$headshotKills / $regularKills) * 100) >= 80)
+then
+    System.out.println("Suspicious Headshot Kills NONE to LOW");
+    modify($user){setSuspicionLevel(SuspicionLevel.LOW);}
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end
+
+rule "Suspicious Headshot Kills LOW to MEDIUM"
+activation-group "suspicionLevels"
+salience 90
+when
+    $aimbotAnalasisEvent : AimbotAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $headshotKills : headshotKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.LOW)
+    eval((((double)$headshotKills / $regularKills) * 100) >= 80)
+then
+    System.out.println("Suspicious Headshot Kills LOW to MEDIUM");
+    modify($user){setSuspicionLevel(SuspicionLevel.MEDIUM);}
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end
+
+rule "Suspicious Headshot Kills MEDIUM to HIGH"
+activation-group "suspicionLevels"
+salience 80
+when
+    $aimbotAnalasisEvent : AimbotAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $headshotKills : headshotKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.MEDIUM)
+    eval((((double)$headshotKills / $regularKills) * 100) >= 80)
+then
+
+    System.out.println("Suspicious Headshot Kills MEDIUM to HIGH");
+    modify($user){setSuspicionLevel(SuspicionLevel.HIGH);}
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end
+
+rule "Suspicious Headshot Kills HIGH to Suspended"
+activation-group "suspicionLevels"
+salience 70
+when
+    $slre : SuspicionLevelRaisedEvent($uId: userId)
+    $user : User($uId == id,suspicionLevel == SuspicionLevel.HIGH)
+then
+    System.out.println("User Suspended");
+    modify($user){setSuspended(true);}
 end

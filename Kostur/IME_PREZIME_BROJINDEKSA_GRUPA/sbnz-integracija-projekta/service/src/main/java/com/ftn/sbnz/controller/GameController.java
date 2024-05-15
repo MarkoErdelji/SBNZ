@@ -80,4 +80,10 @@ public class GameController {
 
         gameServiceImpl.deleteGameById(id);
     }
+
+    @PutMapping("/end/{gameId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void endGame(@PathVariable Long gameId){
+        gameServiceImpl.endGame(gameId);
+    }
 }

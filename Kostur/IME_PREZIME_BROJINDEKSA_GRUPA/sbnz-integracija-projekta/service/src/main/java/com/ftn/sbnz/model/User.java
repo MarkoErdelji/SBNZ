@@ -40,6 +40,16 @@ public class User {
         this.password = password;
     }
 
+    public boolean isSuspended() {
+        return isSuspended;
+    }
+
+    public void setSuspended(boolean suspended) {
+        isSuspended = suspended;
+    }
+
+    @Column
+    private boolean isSuspended;
     @Column
     private String password;
 
@@ -50,6 +60,7 @@ public class User {
     public User(SuspicionLevel suspicionLevel, List<Achievement> achievements) {
         this.suspicionLevel = suspicionLevel;
         this.achievements = achievements;
+        this.isSuspended = false;
     }
 
         public UserType getUserType() {
