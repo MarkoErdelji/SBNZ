@@ -10,6 +10,7 @@ import com.ftn.sbnz.repository.GameStatisticRepository;
 import com.ftn.sbnz.repository.UserRepository;
 import com.ftn.sbnz.service.intefaces.GameService;
 import com.ftn.sbnz.service.intefaces.UserService;
+import org.kie.api.runtime.ClassObjectFilter;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
@@ -145,12 +146,7 @@ public class GameServiceImpl implements GameService {
     public void endGame(Long gameId) {
         Game game = gameRepository.findById(gameId).orElseThrow(() -> new NotFoundException("Game not found with id: " + gameId));
         kieSession.insert(new GameEndedEvent(gameId));
-
         kieSession.fireAllRules();
-        for (FactHandle factHandle : kieSession.getFactHandles()){
-            Object obj = kieSession.getObject(factHandle);
-            System.out.println(obj);
-        }
         gameRepository.save(game);
     }
 }

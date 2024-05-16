@@ -94,4 +94,16 @@ public class User {
     public void setAchievements(List<Achievement> achievements) {
         this.achievements = achievements;
     }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", suspicionLevel=" + suspicionLevel +
+                ", username='" + username + '\'' +
+                ", isSuspended=" + isSuspended +
+                ", password='" + password + '\'' +
+                ", userType=" + userType +
+                '}';
+    }
 }

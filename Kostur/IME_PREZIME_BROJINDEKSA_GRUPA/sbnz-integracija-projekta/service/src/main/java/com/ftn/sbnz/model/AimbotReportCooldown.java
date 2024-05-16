@@ -4,14 +4,14 @@ package com.ftn.sbnz.model;
 import org.kie.api.definition.type.Role;
 
 @Role(Role.Type.EVENT)
-public class ReportCooldown {
+public class AimbotReportCooldown {
 
      private Long gameStatisticId;
 
-    public ReportCooldown() {
+    public AimbotReportCooldown() {
     }
 
-    public ReportCooldown(Long gameStatisticId) {
+    public AimbotReportCooldown(Long gameStatisticId) {
         this.gameStatisticId = gameStatisticId;
     }
 

@@ -1,0 +1,62 @@
+package cep;
+
+import com.ftn.sbnz.model.HeadshotKillEvent;
+import com.ftn.sbnz.model.RegularKillEvent;
+import com.ftn.sbnz.model.WallbangEvent;
+import com.ftn.sbnz.model.UtilityUsageEvent;
+import com.ftn.sbnz.model.GameStatistic;
+import com.ftn.sbnz.model.User;
+import com.ftn.sbnz.model.enums.SuspicionLevel;
+import com.ftn.sbnz.model.UserProcessed;
+import com.ftn.sbnz.model.SuspicionLevelRaisedEvent;
+
+rule "Update Headshot Kills"
+no-loop
+when
+    $event : HeadshotKillEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    modify($stat) {
+        setHeadshotKills($stat.getHeadshotKills() + 1);
+    }
+    modify($stat) {
+        setRegularKills($stat.getRegularKills() + 1);
+    }
+    System.out.println("Headshot kill recorded for game statistic ID: " + $stat.getId());
+end
+
+rule "Update Regular Kills"
+when
+    $event : RegularKillEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    modify($stat) {
+        setRegularKills($stat.getRegularKills() + 1);
+    }
+    System.out.println("Regular kill recorded for game statistic ID: " + $stat.getId());
+end
+
+rule "Update Wallbang Kills"
+when
+    $event : WallbangEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    modify($stat) {
+        setWallbangKills($stat.getWallbangKills() + 1);
+    }
+    modify($stat) {
+        setRegularKills($stat.getRegularKills() + 1);
+    }
+    System.out.println("Wallbang kill recorded for game statistic ID: " + $stat.getId());
+end
+
+rule "Update Utility Usages"
+when
+    $event : UtilityUsageEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    modify($stat) {
+        setUtilityUsages($stat.getUtilityUsages() + 1);
+    }
+    System.out.println("Utility usage recorded for game statistic ID: " + $stat.getId());
+end
