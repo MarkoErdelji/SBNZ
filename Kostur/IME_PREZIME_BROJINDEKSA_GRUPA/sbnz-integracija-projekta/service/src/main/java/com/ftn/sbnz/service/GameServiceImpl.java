@@ -104,7 +104,7 @@ public class GameServiceImpl implements GameService {
         default:
             throw new IllegalArgumentException("Not a valid action!");
         }
-
+        System.out.println(modifiedGameStatistic.getRegularKills());
         System.out.println("reportovi broj: " + modifiedGameStatistic.getReports().size());
         if (index != -1) {
             game.getGameStatistics().set(index, usersStatistic);

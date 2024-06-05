@@ -13,8 +13,11 @@ import com.ftn.sbnz.model.WallhackReportCooldown
 import com.ftn.sbnz.model.UserProcessed
 import com.ftn.sbnz.model.AimbotAnalasisEvent;
 import com.ftn.sbnz.model.SuspicionLevelRaisedEvent;
+import com.ftn.sbnz.model.Achievement;
 import com.ftn.sbnz.model.enums.Report
 import com.ftn.sbnz.model.enums.SuspicionLevel
+import com.ftn.sbnz.model.AssistEvent;
+import com.ftn.sbnz.model.AchievementCooldown;
 
 
 
@@ -69,3 +72,183 @@ then
     update($statistic);
     insert(new WallhackReportCooldown($gameStatId));
 end
+
+rule "Achievement for Exceptional Accuracy"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "Exceptional Accuracy"))
+    Number(intValue >= 10) from accumulate(
+        HeadshotKillEvent(gameStatisticId == $gameStatistic.getId()) over window:time(20m),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("Exceptional Accuracy");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "Exceptional Accuracy"));
+    System.out.println("Achievement for Exceptional Accuracy awarded");
+end
+
+rule "Achievement for Tactical Equipment Use"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "Tactical Equipment Use"))
+    $utilityUsageEvent : UtilityUsageEvent(gameStatisticId == $gameStatistic.getId())
+    Number(intValue >= 3) from accumulate(
+        AssistEvent(gameStatisticId == $gameStatistic.getId(), this after[0, 2m] $utilityUsageEvent) over window:time(2m),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("Tactical Equipment Use");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "Tactical Equipment Use"));
+    System.out.println("Achievement for Tactical Equipment Use awarded");
+end
+
+rule "Achievement for Efficiency"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "Efficiency"))
+    Number(intValue >= 5) from accumulate(
+        RegularKillEvent(gameStatisticId == $gameStatistic.getId()) over window:time(3m),
+        count()
+    )
+    $regularKillEvent : RegularKillEvent(gameStatisticId == $gameStatistic.getId())
+    Number(intValue >= 2) from accumulate(
+        HeadshotKillEvent(gameStatisticId == $gameStatistic.getId(), this after[0, 3m] $regularKillEvent) over window:time(3m),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("Efficiency");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "Efficiency"));
+    System.out.println("Achievement for Efficiency awarded");
+end
+
+rule "Achievement for Team Play"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "Team Play"))
+    Number(intValue >= 5) from accumulate(
+        AssistEvent(gameStatisticId == $gameStatistic.getId()) over window:time(10m),
+        count()
+    )
+    $assistEvent : AssistEvent(gameStatisticId == $gameStatistic.getId())
+    Number(intValue >= 5) from accumulate(
+        UtilityUsageEvent(gameStatisticId == $gameStatistic.getId(), this after[0, 10m] $assistEvent) over window:time(10m),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("Team Play");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "Team Play"));
+    System.out.println("Achievement for Team Play awarded");
+end
+
+rule "Achievement for Creative Play"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "Creative Play"))
+    $headshotKillEvent : HeadshotKillEvent(gameStatisticId == $gameStatistic.getId())
+    $wallbangKillEvent : WallbangEvent(gameStatisticId == $gameStatistic.getId(), this after[0, 3m] $headshotKillEvent)
+    $regularKillEvent : RegularKillEvent(gameStatisticId == $gameStatistic.getId(), this after[0, 3m] $wallbangKillEvent)
+then
+    Achievement achievement = new Achievement("Creative Play");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "Creative Play"));
+    System.out.println("Achievement for Creative Play awarded");
+end
+
+rule "Achievement for 50 Kills"
+when
+    $gameStatistic : GameStatistic(regularKills == 50)
+    $user : User(id == $gameStatistic.getUserId())
+    (
+        exists(HeadshotKillEvent(gameStatisticId == $gameStatistic.getId())) or
+        exists(RegularKillEvent(gameStatisticId == $gameStatistic.getId())) or
+        exists(WallbangEvent(gameStatisticId == $gameStatistic.getId()))
+    )
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "50 Kills"))
+    not($achievement : Achievement(name == "50 Kills") from $user.getAchievements())
+then
+    Achievement achievement = new Achievement("50 Kills");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "50 Kills"));
+    System.out.println("Achievement for 50 Kills awarded");
+end
+
+
+rule "Achievement for 5 Utility Usages"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "5 Utility Usages"))
+    not($achievement : Achievement(name == "5 Utility Usages") from $user.getAchievements())
+    Number(intValue == 5) from accumulate(
+        UtilityUsageEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("5 Utility Usages");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "5 Utility Usages"));
+    System.out.println("Achievement for 5 Utility Usages awarded");
+end
+
+rule "Achievement for 50 Utility Usages"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "50 Utility Usages"))
+    not($achievement : Achievement(name == "50 Utility Usages") from $user.getAchievements())
+    Number(intValue == 50) from accumulate(
+        UtilityUsageEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("50 Utility Usages");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "50 Utility Usages"));
+    System.out.println("Achievement for 50 Utility Usages awarded");
+end
+
+rule "Achievement for 5 Assists"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "5 Assists"))
+    not($achievement : Achievement(name == "5 Assists") from $user.getAchievements())
+    Number(intValue >= 5) from accumulate(
+        AssistEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("5 Assists");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "5 Assists"));
+    System.out.println("Achievement for 5 Assists awarded");
+end
+
+
+
+rule "Achievement for 50 Assists"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "50 Assists"))
+    not($achievement : Achievement(name == "50 Assists") from $user.getAchievements())
+    Number(intValue == 50) from accumulate(
+        AssistEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("50 Assists");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "50 Assists"));
+    System.out.println("Achievement for 50 Assists awarded");
+end
+

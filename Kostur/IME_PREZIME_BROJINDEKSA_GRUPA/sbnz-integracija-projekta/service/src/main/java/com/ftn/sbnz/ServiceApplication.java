@@ -1,8 +1,12 @@
 package com.ftn.sbnz;
 
+import java.io.*;
 import java.util.Arrays;
 
+import org.drools.decisiontable.ExternalSpreadsheetCompiler;
+import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
+import org.kie.internal.utils.KieHelper;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +23,8 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import static org.kie.api.conf.EventProcessingOption.STREAM;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = {"com.ftn.sbnz.repository"})
@@ -42,9 +48,40 @@ public class ServiceApplication  {
 
 
 	@Bean
-	KieSession kieSession(){
-		return kieContainer().newKieSession("cepKsession");
+	KieSession kieSession() throws IOException {
+		InputStream drtInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base.drt"));
+		InputStream excelInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base.xlsx"));
+
+		InputStream drtKillsInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base_kills.drt"));
+		InputStream excelKillsInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base_kills.xlsx"));
+		ExternalSpreadsheetCompiler compiler = new ExternalSpreadsheetCompiler();
+		String drlRules = compiler.compile(excelInputStream,drtInputStream, 2, 1);
+		String drlKillsRules = compiler.compile(excelKillsInputStream,drtKillsInputStream, 2, 1);
+		String cepDrl = readFileToString("./kjar/src/main/resources/rules/cep/cep.drl");
+		String forwardAimbotDrl = readFileToString("./kjar/src/main/resources/rules/cep/forward_aimbot.drl");
+		String forwardWallhackDrl = readFileToString("./kjar/src/main/resources/rules/cep/forward_wallhack.drl");
+		KieHelper kieHelper = new KieHelper();
+        kieHelper.addContent(drlRules, ResourceType.DRL);
+        kieHelper.addContent(drlKillsRules, ResourceType.DRL);
+        kieHelper.addContent(cepDrl, ResourceType.DRL);
+        kieHelper.addContent(forwardAimbotDrl, ResourceType.DRL);
+        kieHelper.addContent(forwardWallhackDrl, ResourceType.DRL);
+
+		return kieHelper.build(STREAM).newKieSession();
 	}
+
+	 private static String readFileToString(String filePath) throws IOException {
+        InputStream inputStream = new FileInputStream(new File(filePath));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        StringBuilder stringBuilder = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            stringBuilder.append(line).append("\n");
+        }
+        reader.close();
+        return stringBuilder.toString();
+    }
+
 	@Bean
 	public KieContainer kieContainer() {
 		KieServices ks = KieServices.Factory.get();

@@ -18,7 +18,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private SuspicionLevel suspicionLevel;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Achievement> achievements;
 
     public String getUsername() {
