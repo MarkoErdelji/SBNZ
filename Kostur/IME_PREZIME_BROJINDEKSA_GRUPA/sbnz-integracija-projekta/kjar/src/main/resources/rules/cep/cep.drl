@@ -203,7 +203,7 @@ rule "Achievement for 50 Utility Usages"
 when
     $gameStatistic : GameStatistic()
     $user : User(id == $gameStatistic.getUserId())
-    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "5 Utility Usages"))
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "50 Utility Usages"))
     not($achievement : Achievement(name == "50 Utility Usages") from $user.getAchievements())
     Number(intValue == 50) from accumulate(
         UtilityUsageEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
@@ -239,7 +239,7 @@ rule "Achievement for 50 Assists"
 when
     $gameStatistic : GameStatistic()
     $user : User(id == $gameStatistic.getUserId())
-    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "5 Assists"))
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "50 Assists"))
     not($achievement : Achievement(name == "50 Assists") from $user.getAchievements())
     Number(intValue == 50) from accumulate(
         AssistEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
