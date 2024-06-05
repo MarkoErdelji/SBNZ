@@ -2,6 +2,7 @@ package cep;
 
 import com.ftn.sbnz.model.HeadshotKillEvent;
 import com.ftn.sbnz.model.RegularKillEvent;
+import com.ftn.sbnz.model.AssistEvent;
 import com.ftn.sbnz.model.WallbangEvent;
 import com.ftn.sbnz.model.UtilityUsageEvent;
 import com.ftn.sbnz.model.GameStatistic;
@@ -49,6 +50,19 @@ then
     }
     System.out.println("Wallbang kill recorded for game statistic ID: " + $stat.getId());
 end
+
+
+rule "Update Assists"
+when
+    $event : AssistEvent()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    modify($stat) {
+        setAssists($stat.getAssists() + 1);
+    }
+    System.out.println("Assist recorded for game statistic ID: " + $stat.getId());
+end
+
 
 rule "Update Utility Usages"
 when
