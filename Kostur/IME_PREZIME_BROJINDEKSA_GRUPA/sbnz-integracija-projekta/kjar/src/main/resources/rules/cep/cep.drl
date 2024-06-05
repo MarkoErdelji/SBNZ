@@ -162,3 +162,93 @@ then
     insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "Creative Play"));
     System.out.println("Achievement for Creative Play awarded");
 end
+
+rule "Achievement for 50 Kills"
+when
+    $gameStatistic : GameStatistic(regularKills == 50)
+    $user : User(id == $gameStatistic.getUserId())
+    (
+        exists(HeadshotKillEvent(gameStatisticId == $gameStatistic.getId())) or
+        exists(RegularKillEvent(gameStatisticId == $gameStatistic.getId())) or
+        exists(WallbangEvent(gameStatisticId == $gameStatistic.getId()))
+    )
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "50 Kills"))
+    not($achievement : Achievement(name == "50 Kills") from $user.getAchievements())
+then
+    Achievement achievement = new Achievement("50 Kills");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "50 Kills"));
+    System.out.println("Achievement for 50 Kills awarded");
+end
+
+
+rule "Achievement for 5 Utility Usages"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "5 Utility Usages"))
+    not($achievement : Achievement(name == "5 Utility Usages") from $user.getAchievements())
+    Number(intValue == 5) from accumulate(
+        UtilityUsageEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("5 Utility Usages");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "5 Utility Usages"));
+    System.out.println("Achievement for 5 Utility Usages awarded");
+end
+
+rule "Achievement for 50 Utility Usages"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "5 Utility Usages"))
+    not($achievement : Achievement(name == "50 Utility Usages") from $user.getAchievements())
+    Number(intValue == 50) from accumulate(
+        UtilityUsageEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("50 Utility Usages");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "50 Utility Usages"));
+    System.out.println("Achievement for 50 Utility Usages awarded");
+end
+
+rule "Achievement for 5 Assists"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "5 Assists"))
+    not($achievement : Achievement(name == "5 Assists") from $user.getAchievements())
+    Number(intValue >= 5) from accumulate(
+        AssistEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("5 Assists");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "5 Assists"));
+    System.out.println("Achievement for 5 Assists awarded");
+end
+
+
+
+rule "Achievement for 50 Assists"
+when
+    $gameStatistic : GameStatistic()
+    $user : User(id == $gameStatistic.getUserId())
+    not(AchievementCooldown(userId == $user.getId(), gameStatisticId == $gameStatistic.getId(), achievementName == "5 Assists"))
+    not($achievement : Achievement(name == "50 Assists") from $user.getAchievements())
+    Number(intValue == 50) from accumulate(
+        AssistEvent(gameStatisticId == $gameStatistic.getId()) over window:time(1h),
+        count()
+    )
+then
+    Achievement achievement = new Achievement("50 Assists");
+    modify($user) { getAchievements().add(achievement) }
+    insert(new AchievementCooldown($user.getId(), $gameStatistic.getId(), "50 Assists"));
+    System.out.println("Achievement for 50 Assists awarded");
+end
+
