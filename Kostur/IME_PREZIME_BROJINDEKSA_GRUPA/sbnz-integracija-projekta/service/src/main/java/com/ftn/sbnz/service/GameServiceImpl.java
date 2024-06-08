@@ -21,10 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -52,6 +49,44 @@ public class GameServiceImpl implements GameService {
     public Optional<Game> getGameById(Long id) {
         return gameRepository.findById(id);
     }
+
+    public List<Game> getUnendedGames() {
+        return gameRepository.findByIsEnded(false);
+    }
+
+   public GameStatistic getUserActiveGameStatistics(String username) {
+    Long userId = userRepository.findByUsername(username).getId();
+    System.out.println("User id"+userId);
+    // Log the contents of the kieSession
+    logKieSessionContents();
+
+    QueryResults results = kieSession.getQueryResults("UserActiveGameStatistics", userId);
+
+
+    for (QueryResultsRow row : results) {
+        GameStatistic gameStatistic = (GameStatistic) row.get("$gameStatistic");
+        return gameStatistic;
+    }
+
+    return null;
+}
+
+private void logKieSessionContents() {
+    Collection<Object> facts = (Collection<Object>) kieSession.getObjects();
+    System.out.println("Contents of kieSession:");
+    for (Object fact : facts) {
+        if (fact instanceof GameStatistic) {
+            GameStatistic gameStatistic = (GameStatistic) fact;
+            System.out.println("GameStatistic: " + gameStatistic.toString() + ", UserId: " + gameStatistic.getUserId());
+        }else if (fact instanceof Game) {
+            Game game = (Game) fact;
+            System.out.println("Game: " + game.toString() + ", ENDED: " + game.isEnded());
+        } else {
+            System.out.println(fact.toString());
+        }
+    }
+}
+
 
     @Override
     public void processGameAction(Long gameId, Action action, String username) {
@@ -125,7 +160,14 @@ public class GameServiceImpl implements GameService {
                 throw new NotFoundException( "User  " + userDTO.getUsername() + " not found.");
             }
         }
-
+        List<Game> unendedGames = gameRepository.findByIsEnded(false);
+        for (Game game : unendedGames) {
+            for (GameStatistic gameStatistic : game.getGameStatistics()) {
+                if (userList.stream().anyMatch(user -> user.getId().equals(gameStatistic.getUserId()))) {
+                    throw new IllegalArgumentException("One or more users are already in an ongoing game!");
+                }
+            }
+        }
         List<GameStatistic> gameStatistics = new ArrayList<>();
         long timestamp = System.currentTimeMillis();
         for (User user : userList) {
@@ -147,6 +189,7 @@ public class GameServiceImpl implements GameService {
     @Override
     public void endGame(Long gameId) {
         Game game = gameRepository.findById(gameId).orElseThrow(() -> new NotFoundException("Game not found with id: " + gameId));
+        game.setEnded(true);
         kieSession.insert(new GameEndedEvent(gameId));
         kieSession.fireAllRules();
         gameRepository.save(game);

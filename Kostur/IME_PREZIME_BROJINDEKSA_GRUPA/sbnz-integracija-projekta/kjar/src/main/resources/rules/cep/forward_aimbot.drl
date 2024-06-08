@@ -17,6 +17,17 @@ import com.ftn.sbnz.model.enums.Report;
 import com.ftn.sbnz.model.enums.SuspicionLevel;
 
 
+
+rule "EndGameOnEvent"
+when
+    $gameEndedEvent : GameEndedEvent()
+    $game : Game(id == $gameEndedEvent.gameId)
+then
+    modify($game) {
+        setEnded(true)
+    };
+end
+
 rule "Detect Aimbot in Game Statistics"
 when
     $event : GameEndedEvent()

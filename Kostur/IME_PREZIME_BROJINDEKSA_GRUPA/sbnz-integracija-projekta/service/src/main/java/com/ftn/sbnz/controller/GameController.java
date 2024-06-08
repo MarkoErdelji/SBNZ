@@ -47,11 +47,34 @@ public class GameController {
                 .orElseThrow(() -> new NotFoundException("Game not found with id: " + id));
     }
 
+     @GetMapping("/unended")
+     @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<?> getUnendedGames() {
+        return new ResponseEntity<>(gameServiceImpl.getUnendedGames(), HttpStatus.OK);
+    }
+
+
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> createGame(@RequestBody List<UserGameDTO> userDTOs) {
 
         return new ResponseEntity<>(gameServiceImpl.saveGame(userDTOs), HttpStatus.OK);
+    }
+
+    @GetMapping("/user-statistics")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<?> getUserGameStatistics() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = ((TokenPrincipalModel) authentication.getPrincipal()).getEmail();
+
+        // Retrieve the user's active game statistics using a Drools query
+        GameStatistic userGameStatistics = gameServiceImpl.getUserActiveGameStatistics(username);
+
+        if (userGameStatistics == null) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No active game.");
+        } else {
+            return ResponseEntity.ok(userGameStatistics);
+        }
     }
 
    @PostMapping("/{gameId}")

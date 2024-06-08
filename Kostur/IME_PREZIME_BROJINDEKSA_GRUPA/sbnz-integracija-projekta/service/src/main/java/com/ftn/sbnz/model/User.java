@@ -30,7 +30,7 @@ public class User {
     }
 
     @Column
-    private String username;
+    public String username;
 
     public String getPassword() {
         return password;
