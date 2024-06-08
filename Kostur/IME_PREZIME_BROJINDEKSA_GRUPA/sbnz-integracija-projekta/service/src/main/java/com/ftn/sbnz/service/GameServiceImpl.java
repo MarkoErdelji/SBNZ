@@ -14,6 +14,8 @@ import org.kie.api.runtime.ClassObjectFilter;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
+import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.QueryResultsRow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -148,5 +150,18 @@ public class GameServiceImpl implements GameService {
         kieSession.insert(new GameEndedEvent(gameId));
         kieSession.fireAllRules();
         gameRepository.save(game);
+    }
+
+    public List<GameStatistic> getLast10GameStatistics(String username) {
+        User user = userRepository.findByUsername(username);
+        QueryResults results = kieSession.getQueryResults("Last 10 GameStatistics", user.getId());
+        List<GameStatistic> gameStatistics = new ArrayList<>();
+
+        for (QueryResultsRow row : results) {
+            List<GameStatistic> gsList = (List<GameStatistic>) row.get("$gameStatistic");
+            gameStatistics.addAll(gsList);
+        }
+
+        return gameStatistics;
     }
 }

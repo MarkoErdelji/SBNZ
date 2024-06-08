@@ -61,6 +61,7 @@ public class ServiceApplication  {
 		String forwardAimbotDrl = readFileToString("./kjar/src/main/resources/rules/cep/forward_aimbot.drl");
 		String forwardWallhackDrl = readFileToString("./kjar/src/main/resources/rules/cep/forward_wallhack.drl");
 		String backwardsDrl = readFileToString("./kjar/src/main/resources/rules/cep/backwards.drl");
+		String querryDrl = readFileToString("./kjar/src/main/resources/rules/cep/querry.drl");
 		KieHelper kieHelper = new KieHelper();
         kieHelper.addContent(drlRules, ResourceType.DRL);
         kieHelper.addContent(drlKillsRules, ResourceType.DRL);
@@ -68,6 +69,7 @@ public class ServiceApplication  {
         kieHelper.addContent(forwardAimbotDrl, ResourceType.DRL);
         kieHelper.addContent(forwardWallhackDrl, ResourceType.DRL);
         kieHelper.addContent(backwardsDrl, ResourceType.DRL);
+        kieHelper.addContent(querryDrl, ResourceType.DRL);
 
 		return kieHelper.build(STREAM).newKieSession();
 	}
