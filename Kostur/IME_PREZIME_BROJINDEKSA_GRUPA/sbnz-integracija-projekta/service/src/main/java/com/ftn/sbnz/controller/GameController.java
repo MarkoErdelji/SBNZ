@@ -84,6 +84,15 @@ public class GameController {
     @PutMapping("/end/{gameId}")
     @PreAuthorize("hasAuthority('ADMIN')")
     public void endGame(@PathVariable Long gameId){
+
         gameServiceImpl.endGame(gameId);
     }
+    @GetMapping("/statistics")
+    public ResponseEntity<?> getLast10GameStastistics(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = ((TokenPrincipalModel) authentication.getPrincipal()).getEmail();
+        return new ResponseEntity<>(gameServiceImpl.getLast10GameStatistics(username), HttpStatus.OK);
+
+    }
+
 }
