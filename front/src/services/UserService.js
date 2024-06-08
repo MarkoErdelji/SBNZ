@@ -30,4 +30,18 @@ const loginUser = async (loginData) => {
   }
 };
 
-export { registerUser, loginUser };
+
+const getUsers = async (token) => {
+  try {
+    const response = await apiClient.get('/users', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+
+export { registerUser, loginUser,getUsers };

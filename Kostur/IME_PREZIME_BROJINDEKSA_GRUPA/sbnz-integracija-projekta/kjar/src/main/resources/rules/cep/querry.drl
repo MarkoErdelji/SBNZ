@@ -1,3 +1,9 @@
 package cep;
 import com.ftn.sbnz.model.GameStatistic
 
+import com.ftn.sbnz.model.User;
+import com.ftn.sbnz.model.enums.UserType;
+
+query getAllUsersNotAdmin
+    $user : User(userType != UserType.ADMIN)
+end

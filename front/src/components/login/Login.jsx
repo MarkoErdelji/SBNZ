@@ -1,7 +1,8 @@
-// src/components/login/Login.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../../services/UserService';
+import {jwtDecode} from 'jwt-decode'; // Correct import
+
 import './Login.css';
 
 const Login = () => {
@@ -9,14 +10,37 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        console.log('Decoded Token:', decodedToken);
+        if (decodedToken.role === 'ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/user');
+        }
+      } catch (error) {
+        console.error('Invalid token:', error);
+      }
+    }
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await loginUser({ username: username, password });
+      const response = await loginUser({ username, password });
       console.log('JWT Token:', response.accessToken);
-      // Save token to local storage or state management
-      // localStorage.setItem('jwtToken', response.token);
-      // Navigate to protected page if needed
+      localStorage.setItem('jwtToken', response.accessToken);
+
+      const decodedToken = jwtDecode(response.accessToken);
+      console.log(decodedToken);
+      if (decodedToken.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/user');
+      }
     } catch (error) {
       console.error('Login error:', error);
     }
@@ -33,7 +57,7 @@ const Login = () => {
       </div>
       <form className="login-form" onSubmit={handleLogin}>
         <div className="form-group">
-        <input
+          <input
             type="text"
             placeholder="Username"
             value={username}

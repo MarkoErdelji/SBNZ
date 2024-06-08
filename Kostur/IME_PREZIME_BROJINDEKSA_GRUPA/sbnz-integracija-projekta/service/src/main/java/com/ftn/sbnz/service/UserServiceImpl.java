@@ -4,27 +4,43 @@ import com.ftn.sbnz.model.User;
 import com.ftn.sbnz.model.UserInfo;
 import com.ftn.sbnz.repository.UserRepository;
 import com.ftn.sbnz.service.intefaces.UserService;
+import org.drools.core.ClassObjectFilter;
+import org.drools.core.impl.StatefulKnowledgeSessionImpl;
+import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.QueryResults;
+import org.kie.api.runtime.rule.QueryResultsRow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
     @Autowired
     private final UserRepository userRepository;
-
+    @Autowired
+     KieSession kieSession;
     public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+    List<User> users = new ArrayList<>();
+
+        QueryResults queryResults = kieSession.getQueryResults("getAllUsersNotAdmin");
+        for (QueryResultsRow row : queryResults) {
+            User user = (User) row.get("$user");
+            users.add(user);
+        }
+
+        return users;
     }
 
     public Optional<User> getUserById(Long id) {

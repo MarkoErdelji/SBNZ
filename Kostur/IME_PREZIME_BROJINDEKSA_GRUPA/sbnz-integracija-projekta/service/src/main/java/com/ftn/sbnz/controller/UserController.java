@@ -44,6 +44,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userServiceImpl.getAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
@@ -69,7 +70,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/generateToken")
-    public ResponseEntity<JwtResponseDTO> authenticateAndGetToken(@RequestBody LoginDTO loginDTO) throws NotFoundException, BadCredentialsException {
+    public ResponseEntity<?> authenticateAndGetToken(@RequestBody LoginDTO loginDTO) throws NotFoundException, BadCredentialsException {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
         User userModel = userServiceImpl.getUserByUsername(loginDTO.getUsername());
         if (authentication.isAuthenticated()) {
@@ -77,7 +78,7 @@ public class UserController {
             JwtResponseDTO jwtResponseDTO = new JwtResponseDTO(token);
             return new ResponseEntity<>(jwtResponseDTO, HttpStatus.OK);
         } else {
-            throw new UsernameNotFoundException("invalid user request !");
+            return new ResponseEntity<>("Bad credentials!", HttpStatus.BAD_REQUEST);
         }
     }
 
