@@ -19,7 +19,7 @@ public class Game {
     private boolean analyzed;
 
     @Column
-    private boolean isEnded = false;
+    public boolean isEnded = false;
 
     public boolean isEnded() {
         return isEnded;

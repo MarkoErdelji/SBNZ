@@ -1,9 +1,16 @@
 package cep;
 import com.ftn.sbnz.model.GameStatistic
+import com.ftn.sbnz.model.Game
 
 import com.ftn.sbnz.model.User;
 import com.ftn.sbnz.model.enums.UserType;
 
 query getAllUsersNotAdmin
     $user : User(userType != UserType.ADMIN)
+end
+
+query UserActiveGameStatistics
+    (Long userIdParam)
+    $gameStatistic : GameStatistic(userId == userIdParam)
+    Game(isEnded == false, gameStatistics contains $gameStatistic)
 end

@@ -17,7 +17,7 @@ public class GameStatistic {
     private Long id;
 
     @Column
-    private Long userId;
+    public Long userId;
     @Column
     private long timestamp;
     @Column

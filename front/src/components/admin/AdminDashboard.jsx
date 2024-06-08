@@ -23,7 +23,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [token, setToken] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Changed to default 5 rows per page
+  const [rowsPerPage, setRowsPerPage] = useState(10); // Changed to default 10 rows per page
 
   useEffect(() => {
     // Retrieve token from local storage
@@ -79,7 +79,7 @@ const AdminDashboard = () => {
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+        rowsPerPageOptions={[10, 25, 50, { label: 'All', value: -1 }]} // Removed 5 from options
         component="div"
         count={users.length}
         rowsPerPage={rowsPerPage}
