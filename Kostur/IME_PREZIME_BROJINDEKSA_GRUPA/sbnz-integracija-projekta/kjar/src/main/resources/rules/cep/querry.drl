@@ -6,4 +6,12 @@ import com.ftn.sbnz.model.enums.UserType;
 
 query getAllUsersNotAdmin
     $user : User(userType != UserType.ADMIN)
+<<<<<<< Updated upstream
+=======
+end
+
+query UserActiveGameStatistics(Long userIdParam)
+    $game : Game(isEnded == false)
+    $gameStatistic : GameStatistic(userId == userIdParam) from $game.gameStatistics
+>>>>>>> Stashed changes
 end

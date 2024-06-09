@@ -72,7 +72,7 @@ public class UserController {
     @PostMapping(value = "/generateToken")
     public ResponseEntity<?> authenticateAndGetToken(@RequestBody LoginDTO loginDTO) throws NotFoundException, BadCredentialsException {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
-        User userModel = userServiceImpl.getUserByUsername(loginDTO.getUsername());
+        User userModel = userServiceImpl.getActiveUserByUsername(loginDTO.getUsername());
         if (authentication.isAuthenticated()) {
             String token = jwtService.generateToken(userModel);
             JwtResponseDTO jwtResponseDTO = new JwtResponseDTO(token);

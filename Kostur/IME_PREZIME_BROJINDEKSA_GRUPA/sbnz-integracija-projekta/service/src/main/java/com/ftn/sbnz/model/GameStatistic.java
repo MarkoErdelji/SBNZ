@@ -30,7 +30,8 @@ public class GameStatistic {
     private int wallbangKills;
     @Column
     private int utilityUsages;
-
+    @Column
+    private Long gameId;
 
     @Enumerated(EnumType.STRING)
     @ElementCollection(targetClass = Report.class)
@@ -38,7 +39,7 @@ public class GameStatistic {
 
     public GameStatistic() {}
 
-    public GameStatistic(Long userId, long timestamp,List<Report> reports) {
+    public GameStatistic(Long userId, long timestamp,List<Report> reports, Long gameId) {
         this.userId = userId;
         this.timestamp = timestamp;
         this.regularKills = 0;
@@ -47,6 +48,15 @@ public class GameStatistic {
         this.wallbangKills = 0;
         this.utilityUsages = 0;
         this.reports = reports;
+        this.gameId = gameId;
+    }
+
+    public Long getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(Long gameId) {
+        this.gameId = gameId;
     }
 
     public int getRegularKills() {

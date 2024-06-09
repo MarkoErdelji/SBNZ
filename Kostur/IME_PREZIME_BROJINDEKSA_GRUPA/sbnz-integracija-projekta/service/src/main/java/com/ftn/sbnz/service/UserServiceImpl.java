@@ -58,7 +58,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username);
     }
-
+    public User getActiveUserByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user != null && !user.isSuspended()) {
+            return user;
+        } else {
+            throw new IllegalArgumentException("User does not exist or is suspended!");
+        }
+    }
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username);
