@@ -51,6 +51,7 @@ public class GameServiceImpl implements GameService {
         return gameRepository.findById(id);
     }
 
+
     public List<Game> getUnendedGames() {
         return gameRepository.findByIsEnded(false);
     }
@@ -65,6 +66,7 @@ public class GameServiceImpl implements GameService {
 
 
     for (QueryResultsRow row : results) {
+        System.out.println(row.toString());
         GameStatistic gameStatistic = (GameStatistic) row.get("$gameStatistic");
         return gameStatistic;
     }
@@ -91,33 +93,17 @@ private void logKieSessionContents() {
 
     @Override
     public void processGameAction(Long gameId, Action action, String username) {
-        Game game = gameRepository.findById(gameId).get();
-        GameStatistic modifiedGameStatistic = null;
-        for (FactHandle factHandle : kieSession.getFactHandles()) {
-            Object obj = kieSession.getObject(factHandle);
-            System.out.println(kieSession.getObject(factHandle));
-            if (obj instanceof Game && ((Game) obj).getId() == game.getId()) {
-                game = (Game) obj;
-            }
+           QueryResults results = kieSession.getQueryResults("UserActiveGameStatistics", userRepository.findByUsername(username).getId());
 
-        }
-
-        GameStatistic usersStatistic = null;
-        for (GameStatistic statistic : game.getGameStatistics()){
-            if (statistic.getUserId() == userService.getUserByUsername(username).getId()){
-                usersStatistic = statistic;
-
+            GameStatistic usersStatistic = null;
+            for (QueryResultsRow row : results) {
+                System.out.println(row.toString());
+                GameStatistic gameStatistic = (GameStatistic) row.get("$gameStatistic");
+                usersStatistic =  gameStatistic;
             }
-        }
-        for (FactHandle factHandle : kieSession.getFactHandles()){
-            Object obj = kieSession.getObject(factHandle);
-            if (obj instanceof GameStatistic && ((GameStatistic) obj).getId() == usersStatistic.getId()) {
-                modifiedGameStatistic = (GameStatistic) obj;
+            if (usersStatistic == null){
+                throw new IllegalArgumentException("User is not currently in a game!");
             }
-        }
-        usersStatistic.setReports(modifiedGameStatistic.getReports());
-        int index = game.getGameStatistics().indexOf(usersStatistic);
-        if (usersStatistic == null){ throw new IllegalArgumentException("User does not participate in this game!");}
         switch (action){
             case REGULAR_KILL:
             kieSession.insert(new RegularKillEvent(usersStatistic.getId(),System.currentTimeMillis()));
@@ -142,46 +128,44 @@ private void logKieSessionContents() {
         default:
             throw new IllegalArgumentException("Not a valid action!");
         }
-        System.out.println(modifiedGameStatistic.getRegularKills());
-        System.out.println("reportovi broj: " + modifiedGameStatistic.getReports().size());
-        if (index != -1) {
-            game.getGameStatistics().set(index, usersStatistic);
-        }
-//        gameStatisticRepository.save(usersStatistic);
-        gameRepository.save(game);
     }
 
-    public Game saveGame(List<UserGameDTO> userDTOs) {
-        List<User> userList = new ArrayList<>();
-        for (UserGameDTO userDTO : userDTOs) {
-            User user = userService.getUserByUsername(userDTO.getUsername());
-            if (user != null) {
-                userList.add(user);
-            } else {
-                throw new NotFoundException( "User  " + userDTO.getUsername() + " not found.");
-            }
+   public Game saveGame(List<UserGameDTO> userDTOs) {
+    List<User> userList = new ArrayList<>();
+    for (UserGameDTO userDTO : userDTOs) {
+        User user = userService.getUserByUsername(userDTO.getUsername());
+        if (user != null) {
+            userList.add(user);
+        } else {
+            throw new NotFoundException( "User  " + userDTO.getUsername() + " not found.");
         }
-        List<Game> unendedGames = gameRepository.findByIsEnded(false);
-        for (Game game : unendedGames) {
-            for (GameStatistic gameStatistic : game.getGameStatistics()) {
-                if (userList.stream().anyMatch(user -> user.getId().equals(gameStatistic.getUserId()))) {
-                    throw new IllegalArgumentException("One or more users are already in an ongoing game!");
-                }
-            }
-        }
-        List<GameStatistic> gameStatistics = new ArrayList<>();
-        long timestamp = System.currentTimeMillis();
-        for (User user : userList) {
-            List<Report> initialReports = new ArrayList<>();
-            GameStatistic gameStatistic = new GameStatistic(user.getId(), timestamp, initialReports);
-            gameStatistics.add(gameStatistic);
-            kieSession.insert(gameStatistic);
-        }
-
-        Game game = new Game(false, gameStatistics);
-        kieSession.insert(game);
-        return gameRepository.save(game);
     }
+    List<Game> unendedGames = gameRepository.findByIsEnded(false);
+    for (Game game : unendedGames) {
+        for (GameStatistic gameStatistic : game.getGameStatistics()) {
+            if (userList.stream().anyMatch(user -> user.getId().equals(gameStatistic.getUserId()))) {
+                throw new IllegalArgumentException("One or more users are already in an ongoing game!");
+            }
+        }
+    }
+
+    Game game = new Game(false, new ArrayList<>());
+    game = gameRepository.save(game);
+
+    long timestamp = System.currentTimeMillis();
+    List<GameStatistic> gameStatistics = new ArrayList<>();
+    for (User user : userList) {
+        List<Report> initialReports = new ArrayList<>();
+        GameStatistic gameStatistic = new GameStatistic(user.getId(), timestamp, initialReports, game.getId());
+        gameStatistic = gameStatisticRepository.save(gameStatistic);
+        gameStatistics.add(gameStatistic);
+        kieSession.insert(gameStatistic);
+    }
+    game.setGameStatistics(gameStatistics);
+    gameRepository.save(game);
+    kieSession.insert(game);
+    return game;
+}
 
     public void deleteGameById(Long id) {
         gameRepository.deleteById(id);

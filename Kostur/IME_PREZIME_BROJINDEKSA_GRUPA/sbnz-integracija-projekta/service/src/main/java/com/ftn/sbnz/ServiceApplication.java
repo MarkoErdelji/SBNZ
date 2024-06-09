@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.Arrays;
 
 import org.drools.decisiontable.ExternalSpreadsheetCompiler;
+import org.kie.api.KieBaseConfiguration;
+import org.kie.api.conf.EventProcessingOption;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
 import org.kie.internal.utils.KieHelper;
@@ -49,30 +51,33 @@ public class ServiceApplication  {
 
 	@Bean
 	KieSession kieSession() throws IOException {
-		InputStream drtInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base.drt"));
-		InputStream excelInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base.xlsx"));
+    InputStream drtInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base.drt"));
+    InputStream excelInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base.xlsx"));
 
-		InputStream drtKillsInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base_kills.drt"));
-		InputStream excelKillsInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base_kills.xlsx"));
-		ExternalSpreadsheetCompiler compiler = new ExternalSpreadsheetCompiler();
-		String drlRules = compiler.compile(excelInputStream,drtInputStream, 2, 1);
-		String drlKillsRules = compiler.compile(excelKillsInputStream,drtKillsInputStream, 2, 1);
-		String cepDrl = readFileToString("./kjar/src/main/resources/rules/cep/cep.drl");
-		String forwardAimbotDrl = readFileToString("./kjar/src/main/resources/rules/cep/forward_aimbot.drl");
-		String forwardWallhackDrl = readFileToString("./kjar/src/main/resources/rules/cep/forward_wallhack.drl");
-		String backwardsDrl = readFileToString("./kjar/src/main/resources/rules/cep/backwards.drl");
-		String querryDrl = readFileToString("./kjar/src/main/resources/rules/cep/querry.drl");
-		KieHelper kieHelper = new KieHelper();
-        kieHelper.addContent(drlRules, ResourceType.DRL);
-        kieHelper.addContent(drlKillsRules, ResourceType.DRL);
-        kieHelper.addContent(cepDrl, ResourceType.DRL);
-        kieHelper.addContent(forwardAimbotDrl, ResourceType.DRL);
-        kieHelper.addContent(forwardWallhackDrl, ResourceType.DRL);
-        kieHelper.addContent(backwardsDrl, ResourceType.DRL);
-        kieHelper.addContent(querryDrl, ResourceType.DRL);
+    InputStream drtKillsInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base_kills.drt"));
+    InputStream excelKillsInputStream = new FileInputStream(new File("./kjar/src/main/resources/rules/cep/base_kills.xlsx"));
+    ExternalSpreadsheetCompiler compiler = new ExternalSpreadsheetCompiler();
+    String drlRules = compiler.compile(excelInputStream,drtInputStream, 2, 1);
+    String drlKillsRules = compiler.compile(excelKillsInputStream,drtKillsInputStream, 2, 1);
+    String cepDrl = readFileToString("./kjar/src/main/resources/rules/cep/cep.drl");
+    String forwardAimbotDrl = readFileToString("./kjar/src/main/resources/rules/cep/forward_aimbot.drl");
+    String forwardWallhackDrl = readFileToString("./kjar/src/main/resources/rules/cep/forward_wallhack.drl");
+    String backwardsDrl = readFileToString("./kjar/src/main/resources/rules/cep/backwards.drl");
+    String querryDrl = readFileToString("./kjar/src/main/resources/rules/cep/querry.drl");
+    KieHelper kieHelper = new KieHelper();
+    kieHelper.addContent(drlRules, ResourceType.DRL);
+    kieHelper.addContent(drlKillsRules, ResourceType.DRL);
+    kieHelper.addContent(cepDrl, ResourceType.DRL);
+    kieHelper.addContent(forwardAimbotDrl, ResourceType.DRL);
+    kieHelper.addContent(forwardWallhackDrl, ResourceType.DRL);
+    kieHelper.addContent(backwardsDrl, ResourceType.DRL);
+    kieHelper.addContent(querryDrl, ResourceType.DRL);
 
-		return kieHelper.build(STREAM).newKieSession();
-	}
+    KieBaseConfiguration config = KieServices.Factory.get().newKieBaseConfiguration();
+    config.setOption(EventProcessingOption.STREAM);
+
+    return kieHelper.build(config).newKieSession();
+}
 
 	 private static String readFileToString(String filePath) throws IOException {
         InputStream inputStream = new FileInputStream(new File(filePath));

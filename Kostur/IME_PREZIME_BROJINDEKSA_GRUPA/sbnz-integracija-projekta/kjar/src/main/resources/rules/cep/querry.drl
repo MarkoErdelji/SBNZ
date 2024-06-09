@@ -7,10 +7,11 @@ import com.ftn.sbnz.model.enums.UserType;
 
 query getAllUsersNotAdmin
     $user : User(userType != UserType.ADMIN)
+
 end
 
-query UserActiveGameStatistics
-    (Long userIdParam)
-    $gameStatistic : GameStatistic(userId == userIdParam)
-    Game(isEnded == false, gameStatistics contains $gameStatistic)
+query UserActiveGameStatistics(Long userIdParam)
+    $game : Game(isEnded == false)
+    $gameStatistic : GameStatistic(userId == userIdParam) from $game.gameStatistics
 end
+
