@@ -16,15 +16,13 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
+import org.kie.api.runtime.rule.Variable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class GameServiceImpl implements GameService {
@@ -53,8 +51,7 @@ public class GameServiceImpl implements GameService {
         return gameRepository.findById(id);
     }
 
-<<<<<<< Updated upstream
-=======
+
     public List<Game> getUnendedGames() {
         return gameRepository.findByIsEnded(false);
     }
@@ -94,7 +91,6 @@ private void logKieSessionContents() {
 }
 
 
->>>>>>> Stashed changes
     @Override
     public void processGameAction(Long gameId, Action action, String username) {
            QueryResults results = kieSession.getQueryResults("UserActiveGameStatistics", userRepository.findByUsername(username).getId());
@@ -143,22 +139,6 @@ private void logKieSessionContents() {
         } else {
             throw new NotFoundException( "User  " + userDTO.getUsername() + " not found.");
         }
-<<<<<<< Updated upstream
-
-        List<GameStatistic> gameStatistics = new ArrayList<>();
-        long timestamp = System.currentTimeMillis();
-        for (User user : userList) {
-            List<Report> initialReports = new ArrayList<>();
-            GameStatistic gameStatistic = new GameStatistic(user.getId(), timestamp, initialReports);
-            gameStatistics.add(gameStatistic);
-            kieSession.insert(gameStatistic);
-        }
-
-        Game game = new Game(false, gameStatistics);
-        kieSession.insert(game);
-        return gameRepository.save(game);
-=======
->>>>>>> Stashed changes
     }
     List<Game> unendedGames = gameRepository.findByIsEnded(false);
     for (Game game : unendedGames) {
@@ -194,6 +174,7 @@ private void logKieSessionContents() {
     @Override
     public void endGame(Long gameId) {
         Game game = gameRepository.findById(gameId).orElseThrow(() -> new NotFoundException("Game not found with id: " + gameId));
+        game.setEnded(true);
         kieSession.insert(new GameEndedEvent(gameId));
         kieSession.fireAllRules();
         gameRepository.save(game);
@@ -210,5 +191,28 @@ private void logKieSessionContents() {
         }
 
         return gameStatistics;
+    }
+
+    public TournamentWinners getTournamentWinner(String tournamentName){
+        TournamentQueryEvent tournamentQueryEvent = new TournamentQueryEvent(tournamentName);
+
+        kieSession.insert(tournamentQueryEvent);
+        kieSession.fireAllRules();
+        QueryResults queryResults = kieSession.getQueryResults("isContainedIn", tournamentName, Variable.v);
+
+        TournamentWinners tournamentWinners = new TournamentWinners();
+        List<String> imeList = new ArrayList<>();
+        for (QueryResultsRow row : queryResults) {
+            Tournament tournament = (Tournament) row.get("$tournament");
+
+                imeList.add(tournament.getString2());
+
+
+        }
+        tournamentWinners.setWinners(imeList);
+        return tournamentWinners;
+
+
+
     }
 }

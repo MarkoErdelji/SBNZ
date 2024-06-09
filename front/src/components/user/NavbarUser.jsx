@@ -16,7 +16,12 @@ const NavbarAdmin = () => {
         <Typography variant="h6" component={Link} to="/user" style={{ textDecoration: 'none', color: 'inherit' }}>
           User Dashboard
         </Typography>
+        <Button
+            color="inherit" component={Link} to="/user/hallOfFame" style={{ textDecoration: 'none', color: 'inherit' }}>
+            Hall of Fame
+          </Button>
         <Button color="inherit" style={{height:'100%',padding:'0px',    maxWidth: '10vw',minHeight:'8vh'}} onClick={handleLogout}>Logout</Button>
+        
       </Toolbar>
     </AppBar>
   );

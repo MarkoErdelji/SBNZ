@@ -17,8 +17,6 @@ import com.ftn.sbnz.model.enums.Report;
 import com.ftn.sbnz.model.enums.SuspicionLevel;
 
 
-<<<<<<< Updated upstream
-=======
 
 rule "EndGameOnEvent"
 no-loop
@@ -29,11 +27,10 @@ then
     modify($game) {
         setEnded(true)
     };
-
     update($game);
 end
 
->>>>>>> Stashed changes
+
 rule "Detect Aimbot in Game Statistics"
 when
     $event : GameEndedEvent()

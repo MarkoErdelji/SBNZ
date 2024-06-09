@@ -1,13 +1,3 @@
-<<<<<<< Updated upstream
-// src/components/user/UserDashboard.jsx
-import React from 'react';
-
-const UserDashboard = () => {
-  return (
-    <div>
-      <h1>User Dashboard</h1>
-    </div>
-=======
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button, Card, CardContent, CardActions, CircularProgress } from '@mui/material';
 import { getUserActiveGameStatistics, performGameAction } from '../../services/GameService';
@@ -84,7 +74,6 @@ const UserDashboard = () => {
         </CardActions>
       </Card>
     </Box>
->>>>>>> Stashed changes
   );
 };
 
