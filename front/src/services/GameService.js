@@ -45,3 +45,8 @@ export const endGame = (gameId, token) => {
       throw new Error(error.response.data.message || 'Error fetching user active game statistics.');
     }
   };
+
+  export const getWinners = async (tournamentName) =>{
+        return apiClient.get(`/winners/${tournamentName}`)
+
+  }
