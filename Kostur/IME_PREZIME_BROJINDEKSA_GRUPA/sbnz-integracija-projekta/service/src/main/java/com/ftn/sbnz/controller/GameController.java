@@ -118,4 +118,10 @@ public class GameController {
 
     }
 
+    @GetMapping("/winners/{tournamentName}")
+    public ResponseEntity<?> getTournamentWinner(@PathVariable String tournamentName){
+        gameServiceImpl.getTournamentWinner(tournamentName);
+        return new ResponseEntity<>(gameServiceImpl.getTournamentWinner(tournamentName), HttpStatus.OK);
+    }
+
 }

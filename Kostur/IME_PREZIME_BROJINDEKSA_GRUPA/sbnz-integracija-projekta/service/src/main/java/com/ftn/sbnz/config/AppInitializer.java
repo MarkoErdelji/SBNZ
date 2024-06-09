@@ -57,8 +57,6 @@ public class AppInitializer {
         kieSession.insert(new Tournament("FNATIC","bodyy"));
         kieSession.insert(new Tournament("FNATIC","BlameF"));
 
-        kieSession.insert("1");
-        kieSession.fireAllRules();
         return args -> {
             List<User> users = userRepository.findAll();
             users.forEach(user -> {

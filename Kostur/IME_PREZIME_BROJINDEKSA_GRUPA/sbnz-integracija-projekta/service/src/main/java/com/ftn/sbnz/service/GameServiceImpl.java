@@ -16,6 +16,7 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.FactHandle;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
+import org.kie.api.runtime.rule.Variable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -206,5 +207,28 @@ private void logKieSessionContents() {
         }
 
         return gameStatistics;
+    }
+
+    public TournamentWinners getTournamentWinner(String tournamentName){
+        TournamentQueryEvent tournamentQueryEvent = new TournamentQueryEvent(tournamentName);
+
+        kieSession.insert(tournamentQueryEvent);
+        kieSession.fireAllRules();
+        QueryResults queryResults = kieSession.getQueryResults("isContainedIn", tournamentName, Variable.v);
+
+        TournamentWinners tournamentWinners = new TournamentWinners();
+        List<String> imeList = new ArrayList<>();
+        for (QueryResultsRow row : queryResults) {
+            Tournament tournament = (Tournament) row.get("$tournament");
+
+                imeList.add(tournament.getString2());
+
+
+        }
+        tournamentWinners.setWinners(imeList);
+        return tournamentWinners;
+
+
+
     }
 }

@@ -9,6 +9,7 @@ import AdminLayout from './components/admin/AdminLayout';
 import UserLayout from './components/user/UserLayout';
 import GamesList from './components/admin/GameList';
 import GameDetails from './components/admin/GameDetails';
+import HallOfFame from './components/hall_of_fame/HallOfFame.jsx';
 
 function App() {
   const token = localStorage.getItem('jwtToken');
@@ -48,6 +49,7 @@ function App() {
             <UserLayout>
               <Routes>
                 <Route path="" element={<UserDashboard />} />
+                <Route path="/hallOfFame" element={<HallOfFame />}/>
               </Routes>
             </UserLayout>
           </PrivateRoute>
