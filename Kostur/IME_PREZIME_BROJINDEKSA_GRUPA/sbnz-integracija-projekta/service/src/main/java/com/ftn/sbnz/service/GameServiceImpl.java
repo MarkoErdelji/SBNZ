@@ -93,7 +93,8 @@ private void logKieSessionContents() {
 
     @Override
     public void processGameAction(Long gameId, Action action, String username) {
-           QueryResults results = kieSession.getQueryResults("UserActiveGameStatistics", userRepository.findByUsername(username).getId());
+        Long userId = userRepository.findByUsername(username).getId();
+           QueryResults results = kieSession.getQueryResults("UserActiveGameStatistics",userId);
 
             GameStatistic usersStatistic = null;
             for (QueryResultsRow row : results) {
@@ -106,23 +107,23 @@ private void logKieSessionContents() {
             }
         switch (action){
             case REGULAR_KILL:
-            kieSession.insert(new RegularKillEvent(usersStatistic.getId(),System.currentTimeMillis()));
+            kieSession.insert(new RegularKillEvent(usersStatistic.getId(),System.currentTimeMillis(),userId));
             kieSession.fireAllRules();
             break;
         case HEADSHOT_KILL:
-            kieSession.insert(new HeadshotKillEvent(usersStatistic.getId()));
+            kieSession.insert(new HeadshotKillEvent(usersStatistic.getId(),userId));
             kieSession.fireAllRules();
             break;
         case UTILITY_USAGE:
-            kieSession.insert(new UtilityUsageEvent(usersStatistic.getId(),System.currentTimeMillis()));
+            kieSession.insert(new UtilityUsageEvent(usersStatistic.getId(),System.currentTimeMillis(),userId));
             kieSession.fireAllRules();
             break;
         case ASSIST:
-            kieSession.insert(new AssistEvent(usersStatistic.getId(),System.currentTimeMillis()));
+            kieSession.insert(new AssistEvent(usersStatistic.getId(),System.currentTimeMillis(),userId));
             kieSession.fireAllRules();
             break;
         case WALLBANG_KILL:
-            kieSession.insert(new WallbangEvent(usersStatistic.getId(),System.currentTimeMillis()));
+            kieSession.insert(new WallbangEvent(usersStatistic.getId(),System.currentTimeMillis(),userId));
             kieSession.fireAllRules();
             break;
         default:

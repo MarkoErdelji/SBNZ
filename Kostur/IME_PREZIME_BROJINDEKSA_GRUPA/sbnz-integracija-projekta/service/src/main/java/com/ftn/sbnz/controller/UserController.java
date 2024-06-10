@@ -1,10 +1,8 @@
 package com.ftn.sbnz.controller;
 
-import com.ftn.sbnz.dto.CreateUserRequestDTO;
-import com.ftn.sbnz.dto.JwtResponseDTO;
-import com.ftn.sbnz.dto.LoginDTO;
-import com.ftn.sbnz.dto.UserResponseDTO;
+import com.ftn.sbnz.dto.*;
 import com.ftn.sbnz.exception.NotFoundException;
+import com.ftn.sbnz.model.TokenPrincipalModel;
 import com.ftn.sbnz.model.User;
 import com.ftn.sbnz.model.enums.SuspicionLevel;
 import com.ftn.sbnz.service.UserServiceImpl;
@@ -12,6 +10,7 @@ import com.ftn.sbnz.service.intefaces.JwtService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
@@ -84,24 +83,19 @@ public class UserController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        if (!userServiceImpl.getUserById(id).isPresent()) {
-            throw new NotFoundException("User not found with id: " + id);
+
+
+     @GetMapping("/achievements")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<List<UserAchievementsDTO>> getUserAchievements() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = ((TokenPrincipalModel) authentication.getPrincipal()).getEmail();
+        User user = userServiceImpl.getUserByUsername(currentUsername);
+        if (user == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
-        user.setId(id); // Make sure the ID is set correctly
-        User updatedUser = userServiceImpl.saveUser(user);
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (!userServiceImpl.getUserById(id).isPresent()) {
-            throw new NotFoundException("User not found with id: " + id);
-        }
-
-        userServiceImpl.deleteUserById(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        List<UserAchievementsDTO> achievements = userServiceImpl.getUserAchievements(user.getId());
+        return new ResponseEntity<>(achievements, HttpStatus.OK);
     }
 }

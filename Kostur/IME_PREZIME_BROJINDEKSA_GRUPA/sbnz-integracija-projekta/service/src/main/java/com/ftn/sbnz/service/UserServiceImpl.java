@@ -1,5 +1,7 @@
 package com.ftn.sbnz.service;
 
+import com.ftn.sbnz.dto.UserAchievementsDTO;
+import com.ftn.sbnz.exception.NotFoundException;
 import com.ftn.sbnz.model.User;
 import com.ftn.sbnz.model.UserInfo;
 import com.ftn.sbnz.repository.UserRepository;
@@ -72,5 +74,29 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if (user == null) {throw new UsernameNotFoundException(username);}
 
         return new UserInfo(user);
+    }
+
+      public List<UserAchievementsDTO> getUserAchievements(Long userId) {
+        QueryResults queryResults = kieSession.getQueryResults("getUserById", userId);
+        if (queryResults.size() == 0) {
+            throw new NotFoundException("User not found with id: " + userId);
+        }
+
+        User user = null;
+        for (QueryResultsRow row : queryResults) {
+            user = (User) row.get("$user");
+        }
+
+        if (user == null) {
+            throw new NotFoundException("User not found with id: " + userId);
+        }
+
+        return user.getAchievements().stream()
+            .map(achievement -> {
+                UserAchievementsDTO achievementDTO = new UserAchievementsDTO();
+                achievementDTO.setName(achievement.getName());
+                return achievementDTO;
+            })
+            .collect(Collectors.toList());
     }
 }

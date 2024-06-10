@@ -48,4 +48,17 @@ const getUsers = async (token) => {
   }
 };
 
-export { registerUser, loginUser,getUsers };
+const getAchievements = async (token) => {
+  try {
+    const response = await apiClient.get('/users/achievements', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response.data;
+  }
+};
+
+export { registerUser, loginUser,getUsers,getAchievements };
