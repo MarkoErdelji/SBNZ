@@ -1,5 +1,6 @@
 package com.ftn.sbnz.controller;
 
+import com.ftn.sbnz.dto.AccumulatedStatsDTO;
 import com.ftn.sbnz.dto.UserGameDTO;
 import com.ftn.sbnz.exception.NotFoundException;
 import com.ftn.sbnz.model.Game;
@@ -59,6 +60,17 @@ public class GameController {
     public ResponseEntity<?> createGame(@RequestBody List<UserGameDTO> userDTOs) {
 
         return new ResponseEntity<>(gameServiceImpl.saveGame(userDTOs), HttpStatus.OK);
+    }
+
+       @GetMapping("/stats/{timePeriod}")
+       @PreAuthorize("hasAuthority('USER')")
+    public ResponseEntity<AccumulatedStatsDTO> getAccumulatedStats(@PathVariable String timePeriod) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = ((TokenPrincipalModel) authentication.getPrincipal()).getEmail();
+        Long userId = userService.getUserByUsername(username).getId();
+
+        AccumulatedStatsDTO accumulatedStatsDTO = gameServiceImpl.getUserAccumulatedStats(userId,timePeriod);
+        return ResponseEntity.ok(accumulatedStatsDTO);
     }
 
     @GetMapping("/user-statistics")

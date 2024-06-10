@@ -11,6 +11,7 @@ import GamesList from './components/admin/GameList';
 import GameDetails from './components/admin/GameDetails';
 import HallOfFame from './components/hall_of_fame/HallOfFame.jsx';
 import Achievements from './components/user/Achievements.jsx';
+import UserReports from './components/user/UserReports.jsx';
 
 function App() {
   const token = localStorage.getItem('jwtToken');
@@ -53,6 +54,7 @@ function App() {
                 <Route path="" element={<UserDashboard />} />
                 <Route path="/hallOfFame" element={<HallOfFame />}/>
                 <Route path="/achievements" element={<Achievements />} />
+                <Route path="/reports" element={<UserReports />} />
               </Routes>
             </UserLayout>
           </PrivateRoute>
