@@ -1,5 +1,6 @@
 package com.ftn.sbnz.service;
 
+import com.ftn.sbnz.dto.AccumulatedStatsDTO;
 import com.ftn.sbnz.dto.UserGameDTO;
 import com.ftn.sbnz.exception.NotFoundException;
 import com.ftn.sbnz.model.*;
@@ -130,6 +131,77 @@ private void logKieSessionContents() {
             throw new IllegalArgumentException("Not a valid action!");
         }
     }
+
+    public AccumulatedStatsDTO getUserAccumulatedStats(Long userId, String timePeriod) {
+    List<GameStatistic> gameStatistics;
+    switch (timePeriod) {
+        case "1d":
+            gameStatistics = getLast1DayStatistics(userId);
+            break;
+        case "7d":
+            gameStatistics = getLast7DaysStatistics(userId);
+            break;
+        case "30d":
+            gameStatistics = getLast30DaysStatistics(userId);
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid time period: " + timePeriod);
+    }
+
+    AccumulatedStatsDTO accumulatedStats = calculateAccumulatedStats(gameStatistics);
+
+    return accumulatedStats;
+}
+
+
+private List<GameStatistic> getLast1DayStatistics(Long userId) {
+    return getGameStatisticsFromQuery("getLast1DayStatistics", userId);
+}
+
+private List<GameStatistic> getLast7DaysStatistics(Long userId) {
+    return getGameStatisticsFromQuery("getLast7DaysStatistics", userId);
+}
+
+private List<GameStatistic> getLast30DaysStatistics(Long userId) {
+    return getGameStatisticsFromQuery("getLast30DaysStatistics", userId);
+}
+
+private List<GameStatistic> getGameStatisticsFromQuery(String queryName, Long userId) {
+    List<GameStatistic> gameStatistics = new ArrayList<>();
+    QueryResults queryResults = kieSession.getQueryResults(queryName, userId);
+    for (QueryResultsRow row : queryResults) {
+        @SuppressWarnings("unchecked")
+        List<GameStatistic> gameStatisticsList = (List<GameStatistic>) row.get("$gameStatistics");
+        for (GameStatistic statistic : gameStatisticsList) {
+            System.out.println(statistic.toString());
+        }
+        gameStatistics.addAll(gameStatisticsList);
+    }
+    return gameStatistics;
+}
+
+    private AccumulatedStatsDTO calculateAccumulatedStats(List<GameStatistic> gameStatistics) {
+    int totalRegularKills = 0;
+    int totalHeadshotKills = 0;
+    int totalAssists = 0;
+    int totalWallbangKills = 0;
+    int totalUtilityUsages = 0;
+
+    for (GameStatistic gameStatistic : gameStatistics) {
+        totalRegularKills += gameStatistic.getRegularKills();
+        totalHeadshotKills += gameStatistic.getHeadshotKills();
+        totalAssists += gameStatistic.getAssists();
+        totalWallbangKills += gameStatistic.getWallbangKills();
+        totalUtilityUsages += gameStatistic.getUtilityUsages();
+    }
+
+
+    double headshotPercentage = (totalRegularKills > 0) ? ((double) totalHeadshotKills / totalRegularKills) * 100 : 0;
+    double wallbangPercentage = (totalRegularKills > 0) ? ((double) totalWallbangKills / totalRegularKills) * 100 : 0;
+
+
+    return new AccumulatedStatsDTO(totalRegularKills, totalHeadshotKills, totalAssists, totalWallbangKills, totalUtilityUsages, headshotPercentage, wallbangPercentage);
+}
 
    public Game saveGame(List<UserGameDTO> userDTOs) {
     List<User> userList = new ArrayList<>();

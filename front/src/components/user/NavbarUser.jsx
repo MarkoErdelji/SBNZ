@@ -22,6 +22,10 @@ const NavbarAdmin = () => {
           Achievements
         </Button>
         <Button
+          color="inherit" component={Link} to="/user/reports" style={{ textDecoration: 'none', color: 'inherit', height:'100%',marginLeft:'20px',    maxWidth: '10vw',minHeight:'8vh' }}>
+          Reports
+        </Button>
+        <Button
             color="inherit" component={Link} to="/user/hallOfFame" style={{ textDecoration: 'none', color: 'inherit', height:'100%',marginLeft:'20px',    maxWidth: '10vw',minHeight:'8vh' }}>
             Hall of Fame
           </Button>

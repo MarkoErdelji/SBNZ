@@ -63,3 +63,17 @@ export const endGame = (gameId, token) => {
         return apiClient.get(`/winners/${tournamentName}`)
 
   }
+
+
+  export const getUserReport = async (token,label) => {
+    try {
+      const response = await apiClient.get("/stats/"+label,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response.data.message || 'Error fetching user active game statistics.');
+    }
+  };

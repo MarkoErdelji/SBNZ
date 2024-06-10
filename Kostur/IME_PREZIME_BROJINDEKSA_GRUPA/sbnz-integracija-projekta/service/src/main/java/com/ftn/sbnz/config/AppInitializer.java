@@ -1,5 +1,6 @@
 package com.ftn.sbnz.config;
 
+import com.ftn.sbnz.model.GameStatistic;
 import com.ftn.sbnz.model.Tournament;
 import com.ftn.sbnz.model.User;
 import com.ftn.sbnz.repository.UserRepository;
@@ -18,6 +19,8 @@ import org.springframework.context.annotation.Configuration;
 import org.drools.decisiontable.ExternalSpreadsheetCompiler;
 
 import java.io.*;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Configuration
