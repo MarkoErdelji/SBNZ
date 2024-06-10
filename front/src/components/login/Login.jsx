@@ -46,10 +46,6 @@ const Login = () => {
     }
   };
 
-  const handleRegister = () => {
-    navigate('/register');
-  };
-
   return (
     <div className="login-container">
       <div className="login-header-container">
@@ -76,7 +72,7 @@ const Login = () => {
         </div>
         <div className="button-group">
           <button type="submit" className="login-button">Login</button>
-          <button type="button" className="register-button" onClick={handleRegister}>Register</button>
+
         </div>
       </form>
     </div>

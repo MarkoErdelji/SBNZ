@@ -8,6 +8,7 @@ public class CreateUserRequestDTO {
     private String username;
     private String password;
 
+
     public CreateUserRequestDTO() {
     }
 

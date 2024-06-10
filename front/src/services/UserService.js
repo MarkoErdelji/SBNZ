@@ -11,9 +11,13 @@ const apiClient = axios.create({
 });
 
 
-const registerUser = async (userData) => {
+const registerUser = async (userData, token) => {
   try {
-    const response = await apiClient.post('/users', userData);
+    const response = await apiClient.post('/users', userData,{
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     return response.data;
   } catch (error) {
     throw error.response.data;

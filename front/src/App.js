@@ -27,7 +27,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+
       <Route
         path="/admin/*"
         element={
@@ -37,6 +37,7 @@ function App() {
                 <Route path="" element={<AdminDashboard />} />
                 <Route path="/unended-games" element={<GamesList />} />
                 <Route path="/unended-games/:gameId" element={<GameDetails />} />
+                <Route path="/create-user" element={<Register />} />
               </Routes>
             </AdminLayout>
           </PrivateRoute>
