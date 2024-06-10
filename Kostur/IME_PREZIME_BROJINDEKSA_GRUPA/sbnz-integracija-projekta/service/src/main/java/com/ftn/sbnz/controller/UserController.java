@@ -6,6 +6,7 @@ import com.ftn.sbnz.dto.LoginDTO;
 import com.ftn.sbnz.dto.UserResponseDTO;
 import com.ftn.sbnz.exception.NotFoundException;
 import com.ftn.sbnz.model.User;
+import com.ftn.sbnz.model.enums.SuspicionLevel;
 import com.ftn.sbnz.service.UserServiceImpl;
 import com.ftn.sbnz.service.intefaces.JwtService;
 import org.modelmapper.ModelMapper;
@@ -64,6 +65,7 @@ public class UserController {
         User userModel = modelMapper.map(createUserRequestDTO, User.class);
         String hashedPassword = passwordEncoder.encode(createUserRequestDTO.getPassword());
         userModel.setPassword(hashedPassword);
+        userModel.setSuspicionLevel(SuspicionLevel.NONE);
         User savedUser = userServiceImpl.saveUser(userModel);
         UserResponseDTO userResponse = modelMapper.map(savedUser, UserResponseDTO.class);
         return new ResponseEntity<>(userResponse, HttpStatus.OK);

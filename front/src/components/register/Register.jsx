@@ -19,21 +19,19 @@ const Register = () => {
       return;
     }
     try {
-      await registerUser({ username, password, userType: 'USER' }); // Adjust userType as needed
+      const token = localStorage.getItem('jwtToken');
+      await registerUser({ username, password, userType: 'USER' }, token); 
       navigate('/');
     } catch (error) {
       console.error('Register error:', error);
     }
   };
 
-  const handleBack = () => {
-    navigate('/');
-  };
 
   return (
     <div className="register-container">
       <div className="register-header-container">
-        <h2>Register</h2>
+        <h2 style={{textAlign:"center"}}>Create user</h2>
       </div>
       <form className="register-form" onSubmit={handleRegister}>
         <div className="form-group">
@@ -83,7 +81,7 @@ const Register = () => {
         </div>
         <div className="button-group">
           <button type="submit" className="submit-button">Submit</button>
-          <button type="button" className="back-button" onClick={handleBack}>Back</button>
+
         </div>
       </form>
     </div>
