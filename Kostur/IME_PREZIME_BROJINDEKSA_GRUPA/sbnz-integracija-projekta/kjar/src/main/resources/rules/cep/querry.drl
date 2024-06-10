@@ -15,3 +15,6 @@ query UserActiveGameStatistics(Long userIdParam)
     $gameStatistic : GameStatistic(userId == userIdParam) from $game.gameStatistics
 end
 
+query getUserById(Long userIdParam)
+    $user : User(id == userIdParam)
+end

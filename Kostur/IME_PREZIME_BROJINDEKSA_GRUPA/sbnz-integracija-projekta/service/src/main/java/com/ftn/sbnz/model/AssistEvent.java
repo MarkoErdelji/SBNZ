@@ -6,14 +6,24 @@ import org.kie.api.definition.type.Role;
 public class AssistEvent {
 
     private Long gameStatisticId;
+    private Long userId;
     private long timestamp;
 
     public AssistEvent() {
     }
 
-    public AssistEvent(Long gameStatisticId, long timestamp) {
+    public AssistEvent(Long gameStatisticId, long timestamp, Long userId) {
         this.gameStatisticId = gameStatisticId;
         this.timestamp = timestamp;
+        this.userId = userId;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public Long getGameStatisticId() {
