@@ -90,7 +90,7 @@ public class UserController {
     public ResponseEntity<List<UserAchievementsDTO>> getUserAchievements() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = ((TokenPrincipalModel) authentication.getPrincipal()).getEmail();
-        User user = userServiceImpl.getUserByUsername(currentUsername);
+        User user = userServiceImpl.getActiveUserByUsername(currentUsername);
         if (user == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }

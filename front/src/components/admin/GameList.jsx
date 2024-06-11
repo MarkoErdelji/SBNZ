@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Grid, CircularProgress, Fab, Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, Box } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { getUnendedGames, createGame } from '../../services/GameService';
+import { getUnendedGames, createGame, endGame } from '../../services/GameService';
 import ErrorDialog from '../ErrorDialog'; // Import the ErrorDialog component
 
 const GamesList = () => {
@@ -53,7 +53,7 @@ const GamesList = () => {
       })
       .catch(error => {
         console.error('There was an error creating the game!', error);
-        setErrorMessage('There was an error creating the game.    ' + error.response.data.message); // Set error message
+        setErrorMessage('There was an error creating the game. ' + error.response.data.message); // Set error message
         setErrorOpen(true); // Open error dialog
       });
   };
@@ -64,6 +64,17 @@ const GamesList = () => {
     setUsernames(newUsernames);
   };
 
+  const handleEndGame = (gameId) => {
+    const token = localStorage.getItem('jwtToken');
+    endGame(gameId, token).then(() => {
+      setGames(prevGames => prevGames.filter(game => game.id !== gameId));
+    }).catch(error => {
+      console.error("There was an error ending the game!", error);
+      setErrorMessage('There was an error ending the game. ' + error.response.data.message); // Set error message
+      setErrorOpen(true); // Open error dialog
+    });
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -72,18 +83,20 @@ const GamesList = () => {
     <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', minHeight: '90vh' }}>
       <Grid container spacing={3} justifyContent="center">
         {games.map(game => (
-          <Grid item xs={12} sm={6} md={4} key={game.id}>
-            <Card onClick={() => navigate(`/admin/unended-games/${game.id}`)} style={{ cursor: 'pointer' }}>
+          <Grid item xs={12} sm={3} md={2} lg={2} key={game.id}>
+            <Card style={{ width: '175px',height: '175px',display:'flex',justifyContent:'center',alignItems:'center' }}>
               <CardContent>
                 <Typography variant="h5" component="div">
                   Game ID: {game.id}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Analyzed: {game.analyzed ? 'Yes' : 'No'}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Ended: {game.isEnded ? 'Yes' : 'No'}
-                </Typography>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  onClick={() => handleEndGame(game.id)} 
+                  sx={{ marginTop: 2 }}
+                >
+                  End Game
+                </Button>
               </CardContent>
             </Card>
           </Grid>

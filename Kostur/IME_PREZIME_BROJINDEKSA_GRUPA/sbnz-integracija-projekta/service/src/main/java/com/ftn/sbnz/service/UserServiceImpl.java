@@ -49,10 +49,18 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return userRepository.findById(id);
     }
 
-    public User saveUser(User user) {
-        return userRepository.save(user);
-    }
+     public User saveUser(User user) {
+        if (userRepository.findByUsername(user.getUsername()) != null) {
+            throw new IllegalArgumentException("User with the username already exists.");
+        }
 
+        User savedUser = userRepository.save(user);
+
+        kieSession.insert(savedUser);
+        kieSession.fireAllRules();
+
+        return savedUser;
+    }
     public void deleteUserById(Long id) {
         userRepository.deleteById(id);
     }
@@ -62,8 +70,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
     public User getActiveUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
-        if (user != null && !user.isSuspended()) {
-            return user;
+        User currentUser = null;
+
+        QueryResults queryResults = kieSession.getQueryResults("getUserById",user.getId());
+        for (QueryResultsRow row : queryResults) {
+            currentUser = (User) row.get("$user");
+        }
+        if (currentUser != null && !currentUser.isSuspended()) {
+            return currentUser;
         } else {
             throw new IllegalArgumentException("User does not exist or is suspended!");
         }
