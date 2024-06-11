@@ -1,0 +1,56 @@
+package cep;
+
+import java.util.List;
+
+
+import com.ftn.sbnz.model.GameStatistic
+import com.ftn.sbnz.model.Game
+
+import com.ftn.sbnz.model.User;
+import com.ftn.sbnz.model.enums.UserType;
+
+query getAllUsersNotAdmin
+    $user : User(userType != UserType.ADMIN)
+
+end
+
+query UserActiveGameStatistics(Long userIdParam)
+    $game : Game(isEnded == false)
+    $gameStatistic : GameStatistic(userId == userIdParam) from $game.gameStatistics
+end
+
+query getUserById(Long userIdParam)
+    $user : User(id == userIdParam)
+end
+
+
+function List getLastNGameStatistics(List gameStatistics, int n) {
+    return gameStatistics.subList(Math.max(0, gameStatistics.size() - n), gameStatistics.size());
+}
+
+
+
+
+query getLast1DayStatistics(Long userIdParam)
+    $gameStatistics : List() from accumulate(
+        $gameStatistic: GameStatistic(userId == userIdParam) over window:time(1d),
+        collectList($gameStatistic)
+    )
+end
+
+query getLast7DaysStatistics(Long userIdParam)
+    $gameStatistics : List() from accumulate(
+        $gameStatistic: GameStatistic(userId == userIdParam) over window:time(7d),
+        collectList($gameStatistic)
+    )
+end
+
+query getLast30DaysStatistics(Long userIdParam)
+    $gameStatistics : List() from accumulate(
+        $gameStatistic: GameStatistic(userId == userIdParam) over window:time(30d),
+        collectList($gameStatistic)
+    )
+end
+
+
+

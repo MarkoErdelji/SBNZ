@@ -1,0 +1,107 @@
+package cep;
+
+import com.ftn.sbnz.model.HeadshotKillEvent;
+import com.ftn.sbnz.model.RegularKillEvent;
+import com.ftn.sbnz.model.User;
+import com.ftn.sbnz.model.UtilityUsageEvent;
+import com.ftn.sbnz.model.GameEndedEvent;
+import com.ftn.sbnz.model.Game;
+import com.ftn.sbnz.model.WallbangEvent;
+import com.ftn.sbnz.model.GameStatistic;
+import com.ftn.sbnz.model.AimbotReportCooldown;
+import com.ftn.sbnz.model.WallhackReportCooldown;
+import com.ftn.sbnz.model.UserProcessed;
+import com.ftn.sbnz.model.AimbotAnalasisEvent;
+import com.ftn.sbnz.model.SuspicionLevelRaisedEvent;
+import com.ftn.sbnz.model.enums.Report;
+import com.ftn.sbnz.model.enums.SuspicionLevel;
+
+
+
+rule "EndGameOnEvent"
+no-loop
+when
+    $gameEndedEvent : GameEndedEvent()
+    $game : Game(id == $gameEndedEvent.gameId)
+then
+    modify($game) {
+        setEnded(true)
+    };
+    update($game);
+end
+
+
+rule "Detect Aimbot in Game Statistics"
+when
+    $event : GameEndedEvent()
+    $game : Game($event.getGameId() == id)
+    $stat : GameStatistic() from $game.getGameStatistics()
+    $aimbotReports : Number(intValue >= 1) from accumulate(
+        $report :  Report( this == Report.AIMBOT) from $stat.getReports(),
+        count($report)
+    )
+then
+    AimbotAnalasisEvent aimbotAnalasisEvent = new AimbotAnalasisEvent($stat.getId());
+    insert(aimbotAnalasisEvent);
+    System.out.println("Aimbot detected in game statistic ID: " + $stat.getId());
+end
+
+rule "Suspicious Headshot Kills NONE to LOW"
+no-loop
+when
+    $aimbotAnalasisEvent : AimbotAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $headshotKills : headshotKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.NONE)
+    eval((((double)$headshotKills / $regularKills) * 100) >= 80)
+    not(UserProcessed(userId == $user.getId(),statisticId == $statId))
+then
+    System.out.println("Suspicious Headshot Kills NONE to LOW");
+    modify($user){setSuspicionLevel(SuspicionLevel.LOW);}
+    insert(new UserProcessed($user.getId(),$statId));
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end
+
+rule "Suspicious Headshot Kills LOW to MEDIUM"
+no-loop
+when
+    $aimbotAnalasisEvent : AimbotAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $headshotKills : headshotKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.LOW)
+    eval((((double)$headshotKills / $regularKills) * 100) >= 80)
+    not(UserProcessed(userId == $user.getId(),statisticId == $statId))
+then
+    System.out.println("Suspicious Headshot Kills LOW to MEDIUM");
+    modify($user){setSuspicionLevel(SuspicionLevel.MEDIUM);}
+    System.out.println($user);
+    insert(new UserProcessed($user.getId(),$statId));
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end
+
+rule "Suspicious Headshot Kills MEDIUM to HIGH"
+no-loop
+when
+    $aimbotAnalasisEvent : AimbotAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $headshotKills : headshotKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.MEDIUM)
+    eval((((double)$headshotKills / $regularKills) * 100) >= 80)
+    not(UserProcessed(userId == $user.getId(),statisticId == $statId))
+then
+
+    System.out.println("Suspicious Headshot Kills MEDIUM to HIGH");
+    modify($user){setSuspicionLevel(SuspicionLevel.HIGH);}
+    insert(new UserProcessed($user.getId(),$statId));
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end
+
+rule "Suspicious Headshot Kills HIGH to Suspended"
+no-loop
+when
+    $slre : SuspicionLevelRaisedEvent($uId: userId)
+    $user : User($uId == id,suspicionLevel == SuspicionLevel.HIGH,!isSuspended())
+then
+    System.out.println("User Suspended");
+    modify($user){setSuspended(true);}
+end

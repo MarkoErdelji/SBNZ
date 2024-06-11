@@ -1,0 +1,83 @@
+package cep;
+
+import com.ftn.sbnz.model.HeadshotKillEvent;
+import com.ftn.sbnz.model.RegularKillEvent;
+import com.ftn.sbnz.model.User;
+import com.ftn.sbnz.model.UtilityUsageEvent;
+import com.ftn.sbnz.model.GameEndedEvent;
+import com.ftn.sbnz.model.Game;
+import com.ftn.sbnz.model.WallbangEvent;
+import com.ftn.sbnz.model.GameStatistic;
+import com.ftn.sbnz.model.AimbotReportCooldown;
+import com.ftn.sbnz.model.WallhackReportCooldown;
+import com.ftn.sbnz.model.UserProcessed;
+import com.ftn.sbnz.model.WallhackAnalasisEvent;
+import com.ftn.sbnz.model.SuspicionLevelRaisedEvent;
+import com.ftn.sbnz.model.enums.Report;
+import com.ftn.sbnz.model.enums.SuspicionLevel;
+
+
+rule "Detect Wallhack in Game Statistics"
+when
+    $event : GameEndedEvent()
+    $game : Game($event.getGameId() == id)
+    $stat : GameStatistic() from $game.getGameStatistics()
+    $aimbotReports : Number(intValue >= 1) from accumulate(
+        $report :  Report( this == Report.WALLHACK) from $stat.getReports(),
+        count($report)
+    )
+then
+    WallhackAnalasisEvent aimbotAnalasisEvent = new WallhackAnalasisEvent($stat.getId());
+    insert(aimbotAnalasisEvent);
+    System.out.println("Aimbot detected in game statistic ID: " + $stat.getId());
+end
+
+rule "Suspicious Wallbang Kills NONE to LOW"
+no-loop
+when
+    $aimbotAnalasisEvent : WallhackAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $wallbangKills : wallbangKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.NONE)
+    eval((((double)$wallbangKills / $regularKills) * 100) >= 50)
+    not(UserProcessed(userId == $user.getId(),statisticId == $statId))
+then
+    System.out.println("Suspicious Wallbang Kills NONE to LOW");
+    modify($user){setSuspicionLevel(SuspicionLevel.LOW);}
+    insert(new UserProcessed($user.getId(),$statId));
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end
+
+rule "Suspicious Wallbang Kills LOW to MEDIUM"
+no-loop
+when
+    $aimbotAnalasisEvent : WallhackAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $wallbangKills : wallbangKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.LOW)
+    eval((((double)$wallbangKills / $regularKills) * 100) >= 50)
+    not(UserProcessed(userId == $user.getId(),statisticId == $statId))
+then
+    System.out.println("Suspicious Wallbang Kills LOW to MEDIUM");
+    modify($user){setSuspicionLevel(SuspicionLevel.MEDIUM);}
+    System.out.println($user);
+    insert(new UserProcessed($user.getId(),$statId));
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end
+
+rule "Suspicious Wallbang Kills MEDIUM to HIGH"
+no-loop
+when
+    $aimbotAnalasisEvent : WallhackAnalasisEvent($statId: gameStatisticId)
+    $gameStatistic : GameStatistic($statId == id, $regularKills : regularKills, $wallbangKills : wallbangKills)
+    $user : User($gameStatistic.getUserId() == id,suspicionLevel == SuspicionLevel.MEDIUM)
+    eval((((double)$wallbangKills / $regularKills) * 100) >= 50)
+    not(UserProcessed(userId == $user.getId(),statisticId == $statId))
+then
+
+    System.out.println("Suspicious Wallbang Kills MEDIUM to HIGH");
+    modify($user){setSuspicionLevel(SuspicionLevel.HIGH);}
+    insert(new UserProcessed($user.getId(),$statId));
+    SuspicionLevelRaisedEvent slre = new SuspicionLevelRaisedEvent($user.getId());
+    insert(slre);
+end

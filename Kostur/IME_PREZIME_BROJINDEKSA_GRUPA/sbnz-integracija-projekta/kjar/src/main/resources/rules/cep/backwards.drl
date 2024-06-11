@@ -1,0 +1,28 @@
+package cep;
+
+import com.ftn.sbnz.model.Tournament;
+import com.ftn.sbnz.model.TournamentQueryEvent;
+import com.ftn.sbnz.model.TournamentWinners;
+
+ query isContainedIn(String x, String y)
+    $tournament: Tournament(x, y; )
+    or
+    ($tournament: Tournament(z, y; ) and isContainedIn(x, z;))
+end
+
+rule "Svi Osvajaci kopenhagena"
+    when
+        $tqr : TournamentQueryEvent( $tournamentName: tournamentName)
+        isContainedIn($tournamentName, ime; )
+    then
+        System.out.println("pobednik: "+ime);
+end
+
+
+rule "Teams that won Major tournaments"
+    when
+        $s : String( this == "1")
+        isContainedIn("G2", ime; )
+    then
+        System.out.println( "Tim " + ime + " je osvojio Copenhagen 2022" );
+end

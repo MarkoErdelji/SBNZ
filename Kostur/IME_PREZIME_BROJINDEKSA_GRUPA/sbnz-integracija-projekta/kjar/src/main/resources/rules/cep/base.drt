@@ -1,0 +1,41 @@
+template header
+eventType
+updateField
+getterMethod
+
+package cep;
+
+import com.ftn.sbnz.model.HeadshotKillEvent
+import com.ftn.sbnz.model.RegularKillEvent
+import com.ftn.sbnz.model.User
+import com.ftn.sbnz.model.UtilityUsageEvent
+import com.ftn.sbnz.model.GameEndedEvent
+import com.ftn.sbnz.model.Game
+import com.ftn.sbnz.model.WallbangEvent
+import com.ftn.sbnz.model.GameStatistic
+import com.ftn.sbnz.model.AimbotReportCooldown
+import com.ftn.sbnz.model.WallhackReportCooldown
+import com.ftn.sbnz.model.UserProcessed
+import com.ftn.sbnz.model.AimbotAnalasisEvent;
+import com.ftn.sbnz.model.SuspicionLevelRaisedEvent;
+import com.ftn.sbnz.model.Achievement;
+import com.ftn.sbnz.model.enums.Report
+import com.ftn.sbnz.model.enums.SuspicionLevel
+import com.ftn.sbnz.model.AssistEvent;
+import com.ftn.sbnz.model.AchievementCooldown;
+
+template "baseTemplate"
+
+rule "Update @{updateField} for @{eventType}"
+no-loop
+when
+    $event : @{eventType}()
+    $stat : GameStatistic(id == $event.getGameStatisticId())
+then
+    modify($stat) {
+        @{updateField}($stat.@{getterMethod}() + 1);
+    }
+    System.out.println("@{eventType} recorded for game statistic ID: " + $stat.getId());
+end
+
+end template
