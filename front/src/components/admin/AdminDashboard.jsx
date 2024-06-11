@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, TablePagination } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { getUsers } from '../../services/UserService'; // Import the UserService
 
 const getStatusColor = (suspicionLevel) => {
@@ -9,14 +11,14 @@ const getStatusColor = (suspicionLevel) => {
     case 'MEDIUM':
       return 'orange';
     case 'LOW':
-      return 'yellow';
+      return '#FFEB3B';
     default:
       return 'green';
   }
 };
 
 const getStatusIcon = (suspended) => {
-  return suspended ? '✅':'❌';
+  return suspended ? <CheckCircleIcon style={{ color: 'red' }} /> : <CancelIcon style={{ color: 'green' }} />;
 };
 
 const AdminDashboard = () => {
@@ -59,7 +61,6 @@ const AdminDashboard = () => {
             <TableRow>
               <TableCell align="center">Username</TableCell>
               <TableCell align="center">Suspicion Level</TableCell>
-              <TableCell align="center">User Type</TableCell>
               <TableCell align="center">Suspended</TableCell>
             </TableRow>
           </TableHead>
@@ -70,7 +71,6 @@ const AdminDashboard = () => {
                 <TableCell align="center">
                   <Box color={getStatusColor(user.suspicionLevel)}>{user.suspicionLevel}</Box>
                 </TableCell>
-                <TableCell align="center">{user.userType}</TableCell>
                 <TableCell align="center">{getStatusIcon(user.suspended)}</TableCell>
               </TableRow>
             ))}
